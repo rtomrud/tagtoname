@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const getopts = require("../node_modules/getopts/index.js");
+const getopts = require("getopts");
 const tagtoname = require("../index.js");
 
 const opts = getopts(process.argv.slice(2), {

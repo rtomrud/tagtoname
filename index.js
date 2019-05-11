@@ -3,7 +3,7 @@ const { access, constants, readdir, rename, stat } = require("fs");
 const EventEmmiter = require("events");
 const { basename, dirname, join } = require("path");
 const { promisify } = require("util");
-const { lock, unlock } = require("./node_modules/lockfile/lockfile.js");
+const { lock, unlock } = require("lockfile");
 
 const execPromise = promisify(exec);
 const accessPromise = promisify(access);

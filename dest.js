@@ -1,5 +1,5 @@
 const { dirname, extname, join } = require("path");
-const standardSlugify = require("./node_modules/standard-slugify/dist/index.js");
+const standardSlugify = require("standard-slugify");
 
 module.exports = function(
   oldPath,
