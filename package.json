@@ -1,0 +1,80 @@
+{
+  "name": "tagtoname",
+  "version": "1.0.0-beta.0",
+  "description": "Renames audio or video files using their metadata tags",
+  "keywords": [
+    "ffmpeg",
+    "ffprobe",
+    "file",
+    "filename",
+    "media",
+    "metadata",
+    "rename",
+    "tag"
+  ],
+  "homepage": "https:github.com/rtomrud/tagtoname#readme",
+  "bugs": {
+    "url": "https:github.com/rtomrud/tagtoname/issues"
+  },
+  "license": "MIT",
+  "author": "Artem Rudenko <rtomrud@gmail.com>",
+  "files": [
+    "bin/cli.js",
+    "dest.js",
+    "index.js"
+  ],
+  "main": "index.js",
+  "bin": "bin/cli.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rtomrud/tagtoname.git"
+  },
+  "scripts": {
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "lint": "eslint .",
+    "start": "node bin/cli.js",
+    "test": "nyc --reporter html tape \"test/**/*.js\" | faucet && nyc check-coverage --statements 100 --branches 100 --functions 100 --lines 100",
+    "posttest": "npm run lint"
+  },
+  "dependencies": {
+    "getopts": "^2.2.4",
+    "lockfile": "^1.0.4",
+    "standard-slugify": "^1.0.0"
+  },
+  "devDependencies": {
+    "coveralls": "3.0.3",
+    "eslint": "^5.16.0",
+    "eslint-config-pretty-strict": "^2.0.0",
+    "eslint-plugin-prettier": "^3.0.1",
+    "faucet": "0.0.1",
+    "husky": "^2.2.0",
+    "nyc": "^14.1.1",
+    "prettier": "1.17.0",
+    "tape": "^4.10.1"
+  },
+  "engines": {
+    "node": "8 || >=10"
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "extends": [
+      "./node_modules/eslint-config-pretty-strict/index.js"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2018,
+      "sourceType": "module"
+    },
+    "root": true
+  },
+  "eslintIgnore": [
+    "coverage"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm test"
+    }
+  }
+}
