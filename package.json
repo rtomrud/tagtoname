@@ -12,9 +12,9 @@
     "rename",
     "tag"
   ],
-  "homepage": "https:github.com/rtomrud/tagtoname#readme",
+  "homepage": "https://github.com/rtomrud/tagtoname#readme",
   "bugs": {
-    "url": "https:github.com/rtomrud/tagtoname/issues"
+    "url": "https://github.com/rtomrud/tagtoname/issues"
   },
   "license": "MIT",
   "author": "Artem Rudenko <rtomrud@gmail.com>",
