@@ -37,7 +37,7 @@
     "posttest": "npm run lint"
   },
   "dependencies": {
-    "getopts": "^2.2.4",
+    "getopts": "^2.2.5",
     "lockfile": "^1.0.4",
     "standard-slugify": "^1.0.0"
   },
