@@ -103,19 +103,14 @@ test("tagtoname with no arguments", async ({ deepEqual, end }) => {
   end();
 });
 
-test("tagtoname with a non-string path", async ({ deepEqual, end }) => {
-  deepEqual(
-    await tagtonamePromise([false]),
-    {
-      same: [],
-      rename: [],
-      error: [
-        TypeError(
-          '[ERR_INVALID_ARG_TYPE]: The "path" argument must be one of type string, Buffer, or URL. Received type boolean'
-        )
-      ]
-    },
-    "emits an error event with a TypeError"
+test("tagtoname with a non-string path", async ({ equal, end }) => {
+  const {
+    error: [error]
+  } = await tagtonamePromise([false]);
+  equal(
+    Object.prototype.isPrototypeOf.call(TypeError.prototype, error),
+    true,
+    "emits an error event of type TypeError"
   );
   end();
 });
