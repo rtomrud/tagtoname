@@ -54,16 +54,6 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
 } else if (opts.version) {
   const { version } = require("../package.json");
   console.log(`tagtoname ${version}`);
-
-  const { exec } = require("child_process");
-  exec(`ffprobe -version`, (error, stdout, stderr) => {
-    if (error) {
-      process.exitCode = 1;
-      console.error(stderr);
-    } else {
-      console.log(stdout);
-    }
-  });
 } else {
   const renamer = tagtoname(
     opts._,

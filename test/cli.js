@@ -106,38 +106,12 @@ test("cli with --version", async ({ deepEqual, end }) => {
   deepEqual(
     await tagtonamePromise("--version"),
     {
-      stdout: [
-        `tagtoname ${require("../package.json").version}\n`,
-        `${(await execPromise("ffprobe -version")).stdout}\n`
-      ],
+      stdout: [`tagtoname ${require("../package.json").version}\n`],
       stderr: [],
       exitCode: 0
     },
     "logs the version of tagtoname and ffprobe to stdout and exits with success"
   );
-  end();
-});
-
-test("cli with --version and no ffprobe in path", async ({
-  deepEqual,
-  equal,
-  end
-}) => {
-  // Note that this fails if run directly but works in test runner
-  const { stdout, stderr, exitCode } = await tagtonamePromise("--version", {
-    env: {}
-  });
-
-  deepEqual(
-    { stdout, exitCode },
-    {
-      stdout: [`tagtoname ${require("../package.json").version}\n`],
-      exitCode: 1
-    },
-    "logs the version of tagtoname to stdout and exits with error"
-  );
-  equal(stderr.length > 0, true, "logs the ffprobe error to stderr");
-
   end();
 });
 
