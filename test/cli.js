@@ -2,12 +2,9 @@ const { exec, spawn } = require("child_process");
 const { access, mkdtemp, readdir, rmdir, unlink } = require("fs").promises;
 const { tmpdir } = require("os");
 const { dirname, extname, join, resolve } = require("path");
-const { promisify } = require("util");
 const test = require("../node_modules/tape/index.js");
 
 const cli = join(__dirname, "../bin/cli.js");
-
-const execPromise = promisify(exec);
 
 const exists = path =>
   access(path)
@@ -29,28 +26,28 @@ const tagtonamePromise = (args, options) =>
     tags2name.stderr.on("data", data => stderr.push(data.toString()));
   });
 
-const encodersByExt = {
-  ".flac": "flac",
-  ".opus": "libopus",
-  ".ogg": "libvorbis",
-  ".m4a": "aac",
-  ".mp3": "libmp3lame"
-};
-
 const setup = files =>
   mkdtemp(join(tmpdir(), "test-")).then(dir =>
     Promise.all(
       Object.entries(files).map(
         ([path, { format: { tags = {} } = {} } = {}]) => {
-          const newPath = join(dir, path);
+          const codec = {
+            ".flac": "flac",
+            ".opus": "libopus",
+            ".ogg": "libvorbis",
+            ".m4a": "aac",
+            ".mp3": "libmp3lame"
+          }[extname(path)];
           const containerMetadata = Object.entries(tags)
             .map(([key, value]) => `-metadata ${key}="${value}"`)
             .join(" ");
-          return execPromise(
-            `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${
-              encodersByExt[extname(path)]
-            } ${containerMetadata} ${newPath}`
-          ).then(() => newPath);
+          const newPath = join(dir, path);
+          return new Promise((resolve, reject) =>
+            exec(
+              `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${containerMetadata} ${newPath}`,
+              error => (error ? reject(error) : resolve(newPath))
+            )
+          );
         }
       )
     ).then(paths => [dir, ...paths])
@@ -87,7 +84,6 @@ Options:
 For example, by default a file with the "mp3" ext, the ARTIST tag "Beethoven",
 and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
 `;
-
   deepEqual(
     await tagtonamePromise("--help"),
     { stdout: [helpMessage], stderr: [], exitCode: 0 },
@@ -98,7 +94,6 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
     { stdout: [], stderr: [helpMessage], exitCode: 1 },
     "logs the help message to stderr and exits with error given no arguments"
   );
-
   end();
 });
 
@@ -126,7 +121,6 @@ test("cli with a file that should be renamed", async ({
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise(oldPath),
     { stdout: [`${newPath}\n`], stderr: [], exitCode: 0 },
@@ -134,7 +128,6 @@ test("cli with a file that should be renamed", async ({
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "creates the new path");
-
   await teardown(dir);
   end();
 });
@@ -150,7 +143,6 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
     "Addicted--09--Numbered.ogg": {}
   });
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
-
   deepEqual(
     await tagtonamePromise(
       `-k -m 1 -n -o-show_streams -o-select_streams -o a:0 -p ffprobe -s-- -t ALBUM -t track -t TITLE ${oldPath} ${errorPath}`
@@ -164,8 +156,6 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
   );
   equal(await exists(oldPath), true, "does not delete the old path");
   equal(await exists(newPath), false, "does not create the new path");
-  equal(await exists(errorPath), true, "does not delete the error path");
-
   await teardown(dir);
   end();
 });
@@ -185,7 +175,6 @@ test("cli with long options and many files", async ({
     "Addicted--09--Numbered.ogg": {}
   });
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
-
   deepEqual(
     await tagtonamePromise(
       `--keep-case --max=1 --noop --option=-show_streams --option=-select_streams --option=a:0 --path=ffprobe --separator=-- --tag=ALBUM --tag=track --tag=TITLE ${oldPath} ${errorPath}`
@@ -199,8 +188,6 @@ test("cli with long options and many files", async ({
   );
   equal(await exists(oldPath), true, "does not delete the old path");
   equal(await exists(newPath), false, "does not create the new path");
-  equal(await exists(errorPath), true, "does not delete the error path");
-
   await teardown(dir);
   end();
 });
@@ -216,7 +203,6 @@ test("cli with one option of each repeatable option", async ({
     }
   });
   const newPath = resolve(dir, "victim-of-the-past.ogg");
-
   deepEqual(
     await tagtonamePromise(`-o-show_streams -t TITLE ${oldPath}`),
     { stdout: [`${newPath}\n`], stderr: [], exitCode: 0 },
@@ -224,7 +210,6 @@ test("cli with one option of each repeatable option", async ({
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "creates the new path");
-
   await teardown(dir);
   end();
 });

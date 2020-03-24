@@ -1,6 +1,6 @@
 const { exec } = require("child_process");
 const {
-  exists,
+  access,
   mkdir,
   mkdtemp,
   readdir,
@@ -8,22 +8,16 @@ const {
   stat,
   unlink,
   writeFile
-} = require("fs");
+} = require("fs").promises;
 const { tmpdir } = require("os");
 const { dirname, extname, join, resolve } = require("path");
-const { promisify } = require("util");
 const test = require("../node_modules/tape/index.js");
 const tagtoname = require("../index.js");
 
-const execPromise = promisify(exec);
-const existsPromise = promisify(exists);
-const mkdirPromise = promisify(mkdir);
-const mkdtempPromise = promisify(mkdtemp);
-const readdirPromise = promisify(readdir);
-const rmdirPromise = promisify(rmdir);
-const statPromise = promisify(stat);
-const unlinkPromise = promisify(unlink);
-const writeFilePromise = promisify(writeFile);
+const exists = path =>
+  access(path)
+    .then(() => true)
+    .catch(() => false);
 
 const tagtonamePromise = (paths, options) =>
   new Promise(resolve => {
@@ -39,16 +33,8 @@ const tagtonamePromise = (paths, options) =>
     renamer.on("error", path => error.push(path));
   });
 
-const encodersByExt = {
-  ".flac": "flac",
-  ".opus": "libopus",
-  ".ogg": "libvorbis",
-  ".m4a": "aac",
-  ".mp3": "libmp3lame"
-};
-
 const setup = files =>
-  mkdtempPromise(join(tmpdir(), "test-")).then(dir =>
+  mkdtemp(join(tmpdir(), "test-")).then(dir =>
     Promise.all(
       Object.entries(files).map(
         ([path, { format: { tags = {} } = {}, streams = [] } = {}]) => {
@@ -70,29 +56,37 @@ const setup = files =>
                 .join(" ")
             )
             .join(" ");
-          return execPromise(
-            `ffmpeg ${inputs} -t 1 -c:a ${
-              encodersByExt[extname(path)]
-            } ${containerMetadata} ${streamMetadata} ${newPath}`
-          ).then(() => newPath);
+          const codec = {
+            ".flac": "flac",
+            ".opus": "libopus",
+            ".ogg": "libvorbis",
+            ".m4a": "aac",
+            ".mp3": "libmp3lame"
+          }[extname(path)];
+          return new Promise((resolve, reject) =>
+            exec(
+              `ffmpeg ${inputs} -t 1 -c:a ${codec} ${containerMetadata} ${streamMetadata} ${newPath}`,
+              error => (error ? reject(error) : resolve(newPath))
+            )
+          );
         }
       )
     ).then(paths => [dir, ...paths])
   );
 
 const teardown = dir =>
-  readdirPromise(dir)
+  readdir(dir)
     .then(files =>
       Promise.all(
         files.map(file => {
           const path = join(dir, file);
-          return statPromise(path).then(stats =>
-            (stats.isDirectory() ? teardown : unlinkPromise)(path)
+          return stat(path).then(stats =>
+            (stats.isDirectory() ? teardown : unlink)(path)
           );
         })
       )
     )
-    .then(() => rmdirPromise(dir));
+    .then(() => rmdir(dir));
 
 test("tagtoname with no arguments", async ({ deepEqual, end }) => {
   deepEqual(
@@ -126,15 +120,13 @@ test("tagtoname with a file that should be renamed", async ({
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath]),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -149,14 +141,12 @@ test("tagtoname with a properly named file", async ({
       format: { tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" } }
     }
   });
-
   deepEqual(
     await tagtonamePromise([oldPath]),
     { rename: [], same: [oldPath], error: [] },
     "emits a same event with the new path"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-
+  equal(await exists(oldPath), true, "does not delete the old path");
   await teardown(dir);
   end();
 });
@@ -182,13 +172,11 @@ test("tagtoname with a path to a folder with properly named files", async ({
       format: { tags: { ARTIST: "Voivod", TITLE: "Tornado" } }
     }
   });
-
   deepEqual(
     await tagtonamePromise([dir]),
     { rename: [], same: oldPaths, error: [] },
     "emits a same event for each properly named file"
   );
-
   await teardown(dir);
   end();
 });
@@ -204,15 +192,13 @@ test("tagtoname with the keepCase option", async ({
     }
   });
   const newPath = resolve(dir, "Paradise-Lost-Victim-Of-The-Past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { keepCase: true }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -224,15 +210,13 @@ test("tagtoname with the max option", async ({ deepEqual, equal, end }) => {
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { max: 1 }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -244,15 +228,13 @@ test("tagtoname with the noop option", async ({ deepEqual, equal, end }) => {
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { noop: true }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-  equal(await existsPromise(newPath), false, "does not create the new path");
-
+  equal(await exists(oldPath), true, "does not delete the old path");
+  equal(await exists(newPath), false, "does not create the new path");
   await teardown(dir);
   end();
 });
@@ -268,16 +250,12 @@ test("tagtoname with the options option", async ({ deepEqual, equal, end }) => {
           }
         },
         {
-          tags: {
-            ARTIST: "Paradise Lost",
-            TITLE: "Victim Of The Past"
-          }
+          tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" }
         }
       ]
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.ogg");
-
   deepEqual(
     await tagtonamePromise([oldPath], {
       options: ["-show_streams", "-select_streams a:1"]
@@ -285,9 +263,8 @@ test("tagtoname with the options option", async ({ deepEqual, equal, end }) => {
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -299,15 +276,13 @@ test("tagtoname with the path option", async ({ deepEqual, equal, end }) => {
     }
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { path: "ffprobe" }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -323,15 +298,13 @@ test("tagtoname with the separator option", async ({
     }
   });
   const newPath = resolve(dir, "paradise-lost---victim-of-the-past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { separator: "---" }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -343,15 +316,13 @@ test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
     }
   });
   const newPath = resolve(dir, "victim-of-the-past-paradise-lost.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], { tags: ["TITLE", "ARTIST"] }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -363,13 +334,12 @@ test("tagtoname with the dest option", async ({ deepEqual, equal, end }) => {
     }
   });
   const newPath = resolve(dir, "Paradise_Lost", "Victim_Of_The_Past.flac");
-
   deepEqual(
     await tagtonamePromise([oldPath], {
       dest: (oldPath, { format: { tags: { ARTIST, TITLE } = {} } = {} }) => {
         const dir = join(dirname(oldPath), ARTIST.replace(/\s+/giu, "_"));
         const newPath = join(dir, `${TITLE.replace(/\s+/giu, "_")}.flac`);
-        return mkdirPromise(dir).then(
+        return mkdir(dir).then(
           () => newPath,
           error => (error.code === "EEXIST" ? newPath : Promise.reject(error))
         );
@@ -378,9 +348,8 @@ test("tagtoname with the dest option", async ({ deepEqual, equal, end }) => {
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "create the new path");
-
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
@@ -396,7 +365,6 @@ test("tagtoname with a file that would override another file on rename", async (
     },
     "paradise-lost-victim-of-the-past.mp3": {}
   });
-
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
@@ -406,8 +374,7 @@ test("tagtoname with a file that would override another file on rename", async (
     },
     "emits an error event with the path that caused the error and its new path"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-
+  equal(await exists(oldPath), true, "does not delete the old path");
   await teardown(dir);
   end();
 });
@@ -417,13 +384,12 @@ test("tagtoname with a file unreadable by ffprobe", async ({
   deepEqual,
   end
 }) => {
-  const dir = await mkdtempPromise(join(tmpdir(), "test-"));
+  const dir = await mkdtemp(join(tmpdir(), "test-"));
   const oldPath = join(dir, "metadata.json");
-  await writeFilePromise(
+  await writeFile(
     oldPath,
     '{ "album": "Mariner", "artist": "Cult of Luna & Julie Christmas", "tracks": 5 }'
   );
-
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
@@ -433,8 +399,7 @@ test("tagtoname with a file unreadable by ffprobe", async ({
     },
     "emits an error event with the path that caused the error"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-
+  equal(await exists(oldPath), true, "does not delete the old path");
   await teardown(dir);
   end();
 });

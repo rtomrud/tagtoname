@@ -144,20 +144,3 @@ test("dest with tags with invalid characters in a URL path", ({
   );
   end();
 });
-
-test("dest with a separator invalid in a URL path", ({ equal, end }) => {
-  equal(
-    dest(
-      "folder/filename.mp3",
-      {
-        format: { tags: { artist: "The Beatles", title: "Yesterday" } }
-      },
-      ["artist", "title"],
-      undefined,
-      " - "
-    ),
-    "folder/the-beatles---yesterday.mp3",
-    "returns a path without separator characters that are invalid in a URL path"
-  );
-  end();
-});
