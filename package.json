@@ -37,9 +37,9 @@
     "posttest": "npm run lint"
   },
   "dependencies": {
-    "getopts": "^2.2.5",
-    "lockfile": "^1.0.4",
-    "standard-slugify": "^1.0.0"
+    "getopts": "2.2.5",
+    "lockfile": "1.0.4",
+    "standard-slugify": "2.0.0"
   },
   "devDependencies": {
     "coveralls": "3.0.6",
