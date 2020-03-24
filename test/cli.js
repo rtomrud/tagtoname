@@ -1,5 +1,5 @@
 const { exec, spawn } = require("child_process");
-const { exists, mkdtemp, readdir, rmdir, unlink } = require("fs");
+const { access, mkdtemp, readdir, rmdir, unlink } = require("fs").promises;
 const { tmpdir } = require("os");
 const { dirname, extname, join, resolve } = require("path");
 const { promisify } = require("util");
@@ -8,11 +8,11 @@ const test = require("../node_modules/tape/index.js");
 const cli = join(__dirname, "../bin/cli.js");
 
 const execPromise = promisify(exec);
-const existsPromise = promisify(exists);
-const mkdtempPromise = promisify(mkdtemp);
-const readdirPromise = promisify(readdir);
-const rmdirPromise = promisify(rmdir);
-const unlinkPromise = promisify(unlink);
+
+const exists = path =>
+  access(path)
+    .then(() => true)
+    .catch(() => false);
 
 const tagtonamePromise = (args, options) =>
   new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ const encodersByExt = {
 };
 
 const setup = files =>
-  mkdtempPromise(join(tmpdir(), "test-")).then(dir =>
+  mkdtemp(join(tmpdir(), "test-")).then(dir =>
     Promise.all(
       Object.entries(files).map(
         ([path, { format: { tags = {} } = {} } = {}]) => {
@@ -57,11 +57,9 @@ const setup = files =>
   );
 
 const teardown = dir =>
-  readdirPromise(dir)
-    .then(files =>
-      Promise.all(files.map(file => unlinkPromise(join(dir, file))))
-    )
-    .then(() => rmdirPromise(dir));
+  readdir(dir)
+    .then(files => Promise.all(files.map(file => unlink(join(dir, file)))))
+    .then(() => rmdir(dir));
 
 test("cli with --help", async ({ deepEqual, end }) => {
   const helpMessage = `Usage: tagtoname [-k] [-m number] [-n] [-o option]... [-p path] [-s separator]
@@ -160,8 +158,8 @@ test("cli with a file that should be renamed", async ({
     { stdout: [`${newPath}\n`], stderr: [], exitCode: 0 },
     "logs the new path to stdout and exits with success"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "creates the new path");
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "creates the new path");
 
   await teardown(dir);
   end();
@@ -190,9 +188,9 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
     },
     "logs the new path to stdout, logs the error to stderr, and exists with error"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-  equal(await existsPromise(newPath), false, "does not create the new path");
-  equal(await existsPromise(errorPath), true, "does not delete the error path");
+  equal(await exists(oldPath), true, "does not delete the old path");
+  equal(await exists(newPath), false, "does not create the new path");
+  equal(await exists(errorPath), true, "does not delete the error path");
 
   await teardown(dir);
   end();
@@ -225,9 +223,9 @@ test("cli with long options and many files", async ({
     },
     "logs the new path to stdout, logs the error to stderr, and exists with error"
   );
-  equal(await existsPromise(oldPath), true, "does not delete the old path");
-  equal(await existsPromise(newPath), false, "does not create the new path");
-  equal(await existsPromise(errorPath), true, "does not delete the error path");
+  equal(await exists(oldPath), true, "does not delete the old path");
+  equal(await exists(newPath), false, "does not create the new path");
+  equal(await exists(errorPath), true, "does not delete the error path");
 
   await teardown(dir);
   end();
@@ -250,8 +248,8 @@ test("cli with one option of each repeatable option", async ({
     { stdout: [`${newPath}\n`], stderr: [], exitCode: 0 },
     "logs the new path to stdout and exits with success"
   );
-  equal(await existsPromise(oldPath), false, "deletes the old path");
-  equal(await existsPromise(newPath), true, "creates the new path");
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "creates the new path");
 
   await teardown(dir);
   end();
