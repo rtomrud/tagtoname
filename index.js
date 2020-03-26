@@ -69,7 +69,7 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
  *
  * - `"rename"`, emitted when the new path is different from the old path,
  * passing the new path (string) to the callback
- * - `"same"`, emitted when the new path is the same as the old path,
+ * - `"abort"`, emitted when the new path is the same as the old path,
  * passing the old path (string) to the callback
  * - `"error"`, emitted when a file cannot be renamed, passing the `Error`
  * object to the callback
@@ -119,7 +119,7 @@ module.exports = function(
               )
               .then(newPath => renameSafely(path, newPath))
               .then(newPath =>
-                emmiter.emit(path === newPath ? "same" : "rename", newPath)
+                emmiter.emit(path === newPath ? "abort" : "rename", newPath)
               )
       )
       .catch(error => emmiter.emit("error", error))

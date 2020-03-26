@@ -41,7 +41,7 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
       tags: Array.isArray(opts.tag) ? opts.tag : [opts.tag]
     })
   );
-  renamer.on("same", console.log);
+  renamer.on("abort", console.log);
   renamer.on("rename", console.log);
   renamer.on("error", ({ message }) => {
     console.error(message);

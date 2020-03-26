@@ -92,7 +92,7 @@ The second argument is an options object with the following properties:
 Returns an [`EventEmmiter`](https://nodejs.org/api/events.html#events_class_eventemitter) object with the following events:
 
 - `"rename"`, emitted when the new path is different from the old path, passing the new path (string) to the callback
-- `"same"`, emitted when the new path is the same as the old path, passing the old path (string) to the callback
+- `"abort"`, emitted when the new path is the same as the old path, passing the old path (string) to the callback
 - `"error"`, emitted when a file cannot be renamed, passing the `Error` object to the callback
 - `"complete"`, emitted when all files have been processed
 
@@ -104,7 +104,7 @@ import tagtoname from "tagtoname";
 // Rename the files at /path/to/folder/ using the "artist" and "title" tags
 tagtoname(["/path/to/folder/"], { tags: ["artist", "title"] })
   .on("rename", newPath => console.error(newPath))
-  .on("same", oldPath => console.log(`${oldPath} kept as is`))
+  .on("abort", oldPath => console.log(`${oldPath} kept as is`))
   .on("error", error => console.error(error.message))
   .on("complete", () => console.log("complete"));
 ```
