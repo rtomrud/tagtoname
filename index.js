@@ -1,5 +1,8 @@
-const { exec } = require("child_process");
-const { access, constants, readdir, rename, stat } = require("fs");
+const { execFile } = require("child_process");
+const {
+  constants,
+  promises: { access, readdir, rename, stat }
+} = require("fs");
 const EventEmmiter = require("events");
 const { cpus } = require("os");
 const { basename, dirname, extname, join } = require("path");
@@ -7,21 +10,17 @@ const { promisify } = require("util");
 const { lock, unlock } = require("lockfile");
 const slugify = require("standard-slugify");
 
-const execPromise = promisify(exec);
-const accessPromise = promisify(access);
-const readdirPromise = promisify(readdir);
-const renamePromise = promisify(rename);
-const statPromise = promisify(stat);
+const execFilePromise = promisify(execFile);
 const lockPromise = promisify(lock);
 const unlockPromise = promisify(unlock);
 
-const createSafeRenamer = renamePromise => (oldPath, newPath) =>
+const createSafeRenamer = rename => (oldPath, newPath) =>
   oldPath === newPath
     ? newPath
-    : accessPromise(newPath, constants.F_OK)
+    : access(newPath, constants.F_OK)
         .then(
           () => Promise.reject(Error()),
-          () => renamePromise(oldPath, newPath)
+          () => rename(oldPath, newPath)
         )
         .then(
           () => newPath,
@@ -31,24 +30,20 @@ const createSafeRenamer = renamePromise => (oldPath, newPath) =>
 const renameWithLock = (oldPath, newPath) => {
   const pathLock = join(dirname(newPath), `${basename(newPath)}.lock`);
   return lockPromise(pathLock)
-    .then(() => renamePromise(oldPath, newPath))
+    .then(() => rename(oldPath, newPath))
     .then(() => unlockPromise(pathLock));
 };
 
-const name = (
-  { format: { tags: formatTags = {} }, streams },
-  tags,
-  separator
-) => {
+const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
   const metadataTags = Object.assign(
     streams.reduce(
       (streamTags, { tags }) => Object.assign(streamTags, tags),
       {}
     ),
-    formatTags
+    tags
   );
-  return tags
-    .map(tag => metadataTags[tag])
+  return selectedTags
+    .map(selectedTag => metadataTags[selectedTag])
     .filter(element => element != null)
     .join(separator);
 };
@@ -97,22 +92,28 @@ module.exports = function(
   const max = cpus().length * 2;
   let workers = 0;
   const work = path => {
-    statPromise(path)
+    stat(path)
       .then(stats =>
         stats.isDirectory()
-          ? readdirPromise(path).then(files =>
+          ? readdir(path).then(files =>
               files.forEach(file => jobs.push(join(path, file)))
             )
-          : execPromise(
-              `ffprobe -print_format json -show_format -show_streams -loglevel error "${path}"`
-            )
+          : execFilePromise("ffprobe", [
+              "-loglevel",
+              "error",
+              "-print_format",
+              "json",
+              "-show_format",
+              "-show_streams",
+              `${path}`
+            ])
               .then(
                 ({ stdout }) =>
                   join(
                     dirname(path),
-                    `${slugify(name(JSON.parse(stdout), tags, separator), {
+                    slugify(name(JSON.parse(stdout), tags, separator), {
                       keepCase
-                    })}${extname(path)}`
+                    }) + extname(path)
                   ),
                 ({ stderr }) => Promise.reject(Error(stderr.trim()))
               )
