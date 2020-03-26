@@ -67,7 +67,7 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
  *
  * Returns an `EventEmmiter` object with the following events:
  *
- * - `"rename"`, emitted when the new path is different from the old path,
+ * - `"success"`, emitted when the new path is different from the old path,
  * passing the new path (string) to the callback
  * - `"abort"`, emitted when the new path is the same as the old path,
  * passing the old path (string) to the callback
@@ -119,7 +119,7 @@ module.exports = function(
               )
               .then(newPath => renameSafely(path, newPath))
               .then(newPath =>
-                emmiter.emit(path === newPath ? "abort" : "rename", newPath)
+                emmiter.emit(path === newPath ? "abort" : "success", newPath)
               )
       )
       .catch(error => emmiter.emit("error", error))

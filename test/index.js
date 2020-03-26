@@ -20,18 +20,18 @@ const exists = path =>
 
 const tagtonamePromise = (paths, options) =>
   new Promise(resolve => {
-    const rename = [];
+    const success = [];
     const abort = [];
     const error = [];
     const renamer = tagtoname(paths, options);
     renamer.on("complete", () =>
       resolve({
-        rename: rename.sort(),
+        success: success.sort(),
         abort: abort.sort(),
         error: error.sort()
       })
     );
-    renamer.on("rename", path => rename.push(path));
+    renamer.on("success", path => success.push(path));
     renamer.on("abort", path => abort.push(path));
     renamer.on("error", path => error.push(path));
   });
@@ -94,7 +94,7 @@ const teardown = dir =>
 test("tagtoname with no arguments", async ({ deepEqual, end }) => {
   deepEqual(
     await tagtonamePromise(),
-    { abort: [], rename: [], error: [] },
+    { abort: [], success: [], error: [] },
     "emits only a done event"
   );
   end();
@@ -125,8 +125,8 @@ test("tagtoname with a file that should be renamed", async ({
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath]),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -146,7 +146,7 @@ test("tagtoname with a properly named file", async ({
   });
   deepEqual(
     await tagtonamePromise([oldPath]),
-    { rename: [], abort: [oldPath], error: [] },
+    { success: [], abort: [oldPath], error: [] },
     "emits an abort event with the new path"
   );
   equal(await exists(oldPath), true, "does not delete the old path");
@@ -177,7 +177,7 @@ test("tagtoname with a path to a folder with properly named files", async ({
   });
   deepEqual(
     await tagtonamePromise([dir]),
-    { rename: [], abort: oldPaths, error: [] },
+    { success: [], abort: oldPaths, error: [] },
     "emits an abort event for each properly named file"
   );
   await teardown(dir);
@@ -197,8 +197,8 @@ test("tagtoname with the keepCase option", async ({
   const newPath = resolve(dir, "Paradise-Lost-Victim-Of-The-Past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { keepCase: true }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -215,8 +215,8 @@ test("tagtoname with the max option", async ({ deepEqual, equal, end }) => {
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { max: 1 }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -233,8 +233,8 @@ test("tagtoname with the noop option", async ({ deepEqual, equal, end }) => {
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { noop: true }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), true, "does not delete the old path");
   equal(await exists(newPath), false, "does not create the new path");
@@ -263,8 +263,8 @@ test("tagtoname with the options option", async ({ deepEqual, equal, end }) => {
     await tagtonamePromise([oldPath], {
       options: ["-show_streams", "-select_streams a:1"]
     }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -281,8 +281,8 @@ test("tagtoname with the path option", async ({ deepEqual, equal, end }) => {
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { path: "ffprobe" }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -303,8 +303,8 @@ test("tagtoname with the separator option", async ({
   const newPath = resolve(dir, "paradise-lost---victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { separator: "---" }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -321,8 +321,8 @@ test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
   const newPath = resolve(dir, "victim-of-the-past-paradise-lost.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { tags: ["TITLE", "ARTIST"] }),
-    { rename: [newPath], abort: [], error: [] },
-    "emits a rename event with the new path"
+    { success: [newPath], abort: [], error: [] },
+    "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
   equal(await exists(newPath), true, "create the new path");
@@ -330,7 +330,7 @@ test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
   end();
 });
 
-test("tagtoname with a file that would override another file on rename", async ({
+test("tagtoname with a file that would override another file on success", async ({
   deepEqual,
   equal,
   end
@@ -344,7 +344,7 @@ test("tagtoname with a file that would override another file on rename", async (
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
-      rename: [],
+      success: [],
       abort: [],
       error: [Error(`${oldPath} would override ${existingFile}`)]
     },
@@ -369,7 +369,7 @@ test("tagtoname with a file unreadable by ffprobe", async ({
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
-      rename: [],
+      success: [],
       abort: [],
       error: [Error(`${oldPath}: Invalid data found when processing input\n`)]
     },

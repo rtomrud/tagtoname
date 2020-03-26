@@ -42,7 +42,7 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
     })
   );
   renamer.on("abort", console.log);
-  renamer.on("rename", console.log);
+  renamer.on("success", console.log);
   renamer.on("error", ({ message }) => {
     console.error(message);
     process.exitCode = 1;
