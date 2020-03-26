@@ -21,7 +21,7 @@ npm install tagtoname
 
 ## CLI
 
-```bash
+```
 Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
 
 Renames the files at path(s) to a URL-safe name using the metadata tag(s).
