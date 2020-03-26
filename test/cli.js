@@ -65,7 +65,7 @@ Renames the files at path(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 
-  -k, --keep-case            Keep the case from the tags when renaming
+  -k, --keep-case            Keep the original case of the tags when renaming
   -n, --noop                 Dry run, show new paths without renaming the files
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
                              defaults to -s-

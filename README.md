@@ -28,7 +28,7 @@ Renames the files at path(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 
-  -k, --keep-case            Keep the case from the tags when renaming
+  -k, --keep-case            Keep the original case of the tags when renaming
   -n, --noop                 Dry run, show new paths without renaming the files
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
                              defaults to -s-
@@ -54,7 +54,7 @@ tagtoname folder
 ```
 
 ```bash
-# Rename a file and keep the case from the tags instead of lowercasing.
+# Rename a file and keep the original case of the tags instead of lowercasing.
 # For example, if the file has the "artist" tag "Philip Glass", and the "title"
 # tag "Opening", it will be renamed to "Philip-Glass-Opening.mp3".
 tagtoname -k file.mp3
@@ -84,7 +84,7 @@ traverses them.
 
 The second argument is an options object with the following properties:
 
-- `keepCase`: Keep the case from the tags when renaming, defaults to `false`
+- `keepCase`: Keep the original case of the tags when renaming, defaults to `false`
 - `noop`: Whether to perform a dry run and not rename files, defaults to `false`
 - `separator`: The separator used to split the tags in the name, defaults to `"-"`
 - `tags`: An array of tags to use in the new name of the file, defaults to `["ARTIST", "artist", "TITLE", "title"]`

@@ -56,7 +56,7 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
  *
  * The second argument is an options object with the following properties:
  *
- * - `keepCase`: Keep the case from the tags when renaming, defaults to
+ * - `keepCase`: Keep the original case of the tags when renaming, defaults to
  * `false`
  * - `noop`: Whether to perform a dry run and not rename files, defaults to
  * `false`
