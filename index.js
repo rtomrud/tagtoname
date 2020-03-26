@@ -1,9 +1,11 @@
 const { exec } = require("child_process");
 const { access, constants, readdir, rename, stat } = require("fs");
 const EventEmmiter = require("events");
-const { basename, dirname, join } = require("path");
+const { cpus } = require("os");
+const { basename, dirname, extname, join } = require("path");
 const { promisify } = require("util");
 const { lock, unlock } = require("lockfile");
+const slugify = require("standard-slugify");
 
 const execPromise = promisify(exec);
 const accessPromise = promisify(access);
@@ -33,6 +35,24 @@ const renameWithLock = (oldPath, newPath) => {
     .then(() => unlockPromise(pathLock));
 };
 
+const name = (
+  { format: { tags: formatTags = {} }, streams },
+  tags,
+  separator
+) => {
+  const metadataTags = Object.assign(
+    streams.reduce(
+      (streamTags, { tags }) => Object.assign(streamTags, tags),
+      {}
+    ),
+    formatTags
+  );
+  return tags
+    .map(tag => metadataTags[tag])
+    .filter(element => element != null)
+    .join(separator);
+};
+
 /**
  * Renames audio or video files using their metadata tags.
  *
@@ -43,26 +63,12 @@ const renameWithLock = (oldPath, newPath) => {
  *
  * - `keepCase`: Keep the case from the tags when renaming, defaults to
  * `false`
- * - `max`: The maximum amount of concurrent ffprobe tasks to spawn, defaults to
- * `32`
  * - `noop`: Whether to perform a dry run and not rename files, defaults to
  * `false`
- * - `options`: An array of ffprobe options to pass to ffprobe, defaults to
- * `["-show_streams", "-show_format"]`
- * - `path`: The path of the ffprobe binary used to read metadata, defaults to
- * `"ffprobe"`
  * - `separator`: The separator used to split the tags in the name, defaults to
  * `"-"`
  * - `tags`: An array of tags to use in the new name of the file, defaults to
  * `["ARTIST", "artist", "TITLE", "title"]`
- * - `dest`: A custom function, which can be either sync or async, that returns
- * the destination path of a rename (the new path), with signature
- * `(oldPath, ffprobeJSON, tags, keepCase, separator) => newPath`, where
- * `oldPath` is the old path (string) of the file, `ffprobeJSON` is the JSON
- * object returned by ffprobe, the above options `tags`, `keepCase`, and
- * `separator` are the rest of arguments, the returned `newPath` is the new path
- * (string) of the file, and if it throws or rejects an `"error"` event is
- * emitted with the thrown error or rejection value
  *
  * Returns an `EventEmmiter` object with the following events:
  *
@@ -78,21 +84,17 @@ module.exports = function(
   paths = [],
   {
     keepCase = false,
-    max = 32,
     noop = false,
-    options = ["-show_streams", "-show_format"],
-    path = "ffprobe",
     separator = "-",
-    tags = ["ARTIST", "artist", "TITLE", "title"],
-    dest = require("./dest.js")
+    tags = ["ARTIST", "artist", "TITLE", "title"]
   } = {}
 ) {
-  const cmd = `${path} -print_format json -loglevel error ${options.join(" ")}`;
   const renameSafely = createSafeRenamer(
     noop ? () => Promise.resolve() : renameWithLock
   );
   const emmiter = new EventEmmiter();
   const jobs = [...paths];
+  const max = cpus().length * 2;
   let workers = 0;
   const work = path => {
     statPromise(path)
@@ -101,10 +103,17 @@ module.exports = function(
           ? readdirPromise(path).then(files =>
               files.forEach(file => jobs.push(join(path, file)))
             )
-          : execPromise(`${cmd} "${path}"`)
+          : execPromise(
+              `ffprobe -print_format json -show_format -show_streams -loglevel error "${path}"`
+            )
               .then(
                 ({ stdout }) =>
-                  dest(path, JSON.parse(stdout), tags, keepCase, separator),
+                  join(
+                    dirname(path),
+                    `${slugify(name(JSON.parse(stdout), tags, separator), {
+                      keepCase
+                    })}${extname(path)}`
+                  ),
                 ({ stderr }) => Promise.reject(Error(stderr.trim()))
               )
               .then(newPath => renameSafely(path, newPath))

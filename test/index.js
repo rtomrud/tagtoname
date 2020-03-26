@@ -1,7 +1,6 @@
 const { exec } = require("child_process");
 const {
   access,
-  mkdir,
   mkdtemp,
   readdir,
   rmdir,
@@ -10,7 +9,7 @@ const {
   writeFile
 } = require("fs").promises;
 const { tmpdir } = require("os");
-const { dirname, extname, join, resolve } = require("path");
+const { extname, join, resolve } = require("path");
 const test = require("../node_modules/tape/index.js");
 const tagtoname = require("../index.js");
 
@@ -318,33 +317,6 @@ test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
   const newPath = resolve(dir, "victim-of-the-past-paradise-lost.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { tags: ["TITLE", "ARTIST"] }),
-    { rename: [newPath], same: [], error: [] },
-    "emits a rename event with the new path"
-  );
-  equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
-  await teardown(dir);
-  end();
-});
-
-test("tagtoname with the dest option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: { tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" } }
-    }
-  });
-  const newPath = resolve(dir, "Paradise_Lost", "Victim_Of_The_Past.flac");
-  deepEqual(
-    await tagtonamePromise([oldPath], {
-      dest: (oldPath, { format: { tags: { ARTIST, TITLE } = {} } = {} }) => {
-        const dir = join(dirname(oldPath), ARTIST.replace(/\s+/giu, "_"));
-        const newPath = join(dir, `${TITLE.replace(/\s+/giu, "_")}.flac`);
-        return mkdir(dir).then(
-          () => newPath,
-          error => (error.code === "EEXIST" ? newPath : Promise.reject(error))
-        );
-      }
-    }),
     { rename: [newPath], same: [], error: [] },
     "emits a rename event with the new path"
   );

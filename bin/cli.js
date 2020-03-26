@@ -4,43 +4,22 @@ const getopts = require("getopts");
 const tagtoname = require("../index.js");
 
 const opts = getopts(process.argv.slice(2), {
-  alias: {
-    k: ["keep-case", "keepCase"],
-    m: "max",
-    n: "noop",
-    o: "option",
-    p: "path",
-    s: "separator",
-    t: "tag"
-  },
+  alias: { k: ["keep-case", "keepCase"], n: "noop", s: "separator", t: "tag" },
   boolean: ["k", "n", "help", "version"],
-  string: ["m", "o", "p", "s", "t"],
-  default: {
-    m: 32,
-    o: ["-show_streams", "-show_format"],
-    p: "ffprobe",
-    s: "-",
-    t: ["ARTIST", "artist", "TITLE", "title"]
-  }
+  string: ["s", "t"],
+  default: { s: "-", t: ["ARTIST", "artist", "TITLE", "title"] }
 });
 
 if (opts.help || (!opts.version && opts._.length === 0)) {
   const log = opts.help ? console.log : console.error;
-  log(`Usage: tagtoname [-k] [-m number] [-n] [-o option]... [-p path] [-s separator]
-                 [-t tag]... path...
+  log(`Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
 
 Renames the files at path(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 
   -k, --keep-case            Keep the case from the tags when renaming
-  -m, --max=NUMBER           Run at most MAX ffprobe tasks concurrently;
-                             defaults to -m 32
   -n, --noop                 Dry run, show new paths without renaming the files
-  -o, --option=OPTION        Read metadata with ffprobe OPTION(s);
-                             defaults to -o-show_format -o-show_streams
-  -p, --path=PATH            Read metadata with the ffprobe binary at PATH;
-                             defaults to -p ffprobe
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
                              defaults to -s-
   -t, --tag=TAG              Append TAG(s) to the new name;

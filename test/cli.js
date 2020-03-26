@@ -59,21 +59,14 @@ const teardown = dir =>
     .then(() => rmdir(dir));
 
 test("cli with --help", async ({ deepEqual, end }) => {
-  const helpMessage = `Usage: tagtoname [-k] [-m number] [-n] [-o option]... [-p path] [-s separator]
-                 [-t tag]... path...
+  const helpMessage = `Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
 
 Renames the files at path(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 
   -k, --keep-case            Keep the case from the tags when renaming
-  -m, --max=NUMBER           Run at most MAX ffprobe tasks concurrently;
-                             defaults to -m 32
   -n, --noop                 Dry run, show new paths without renaming the files
-  -o, --option=OPTION        Read metadata with ffprobe OPTION(s);
-                             defaults to -o-show_format -o-show_streams
-  -p, --path=PATH            Read metadata with the ffprobe binary at PATH;
-                             defaults to -p ffprobe
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
                              defaults to -s-
   -t, --tag=TAG              Append TAG(s) to the new name;

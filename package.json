@@ -20,7 +20,6 @@
   "author": "Artem Rudenko <rtomrud@gmail.com>",
   "files": [
     "bin/cli.js",
-    "dest.js",
     "index.js"
   ],
   "main": "index.js",
