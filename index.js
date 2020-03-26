@@ -73,7 +73,7 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
  * passing the old path (string) to the callback
  * - `"error"`, emitted when a file cannot be renamed, passing the `Error`
  * object to the callback
- * - `"done"`, emitted when all files have been processed
+ * - `"complete"`, emitted when all files have been processed
  */
 module.exports = function(
   paths = [],
@@ -126,7 +126,7 @@ module.exports = function(
       .then(() => {
         workers -= 1;
         if (jobs.length === 0 && workers === 0) {
-          emmiter.emit("done");
+          emmiter.emit("complete");
         } else {
           while (jobs.length > 0 && workers < max) {
             work(jobs.pop());
@@ -142,7 +142,7 @@ module.exports = function(
       workers += 1;
     }
   } else {
-    setTimeout(() => emmiter.emit("done"), 0);
+    setTimeout(() => emmiter.emit("complete"), 0);
   }
 
   return emmiter;

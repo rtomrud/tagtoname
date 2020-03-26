@@ -94,7 +94,7 @@ Returns an [`EventEmmiter`](https://nodejs.org/api/events.html#events_class_even
 - `"rename"`, emitted when the new path is different from the old path, passing the new path (string) to the callback
 - `"same"`, emitted when the new path is the same as the old path, passing the old path (string) to the callback
 - `"error"`, emitted when a file cannot be renamed, passing the `Error` object to the callback
-- `"done"`, emitted when all files have been processed
+- `"complete"`, emitted when all files have been processed
 
 ### Examples
 
@@ -106,7 +106,7 @@ tagtoname(["/path/to/folder/"], { tags: ["artist", "title"] })
   .on("rename", newPath => console.error(newPath))
   .on("same", oldPath => console.log(`${oldPath} kept as is`))
   .on("error", error => console.error(error.message))
-  .on("done", () => console.log("Done"));
+  .on("complete", () => console.log("complete"));
 ```
 
 ## License

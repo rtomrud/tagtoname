@@ -24,7 +24,7 @@ const tagtonamePromise = (paths, options) =>
     const same = [];
     const error = [];
     const renamer = tagtoname(paths, options);
-    renamer.on("done", () =>
+    renamer.on("complete", () =>
       resolve({ rename: rename.sort(), same: same.sort(), error: error.sort() })
     );
     renamer.on("rename", path => rename.push(path));
