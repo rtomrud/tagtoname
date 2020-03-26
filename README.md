@@ -103,10 +103,9 @@ import tagtoname from "tagtoname";
 
 // Rename the files at /path/to/folder/ using the "artist" and "title" tags
 tagtoname(["/path/to/folder/"], { tags: ["artist", "title"] })
-  .on("success", newPath => console.error(newPath))
-  .on("abort", oldPath => console.log(`${oldPath} kept as is`))
-  .on("error", error => console.error(error.message))
-  .on("complete", () => console.log("complete"));
+  .on("success", newPath => console.log(newPath))
+  .on("abort", oldPath => console.log(`${oldPath} (unchanged)`))
+  .on("error", error => console.error(error.message));
 ```
 
 ## License
