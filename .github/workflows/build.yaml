@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: sudo apt-get install -y ffmpeg
+      - run: wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+      - run: tar -xvf ffmpeg-release-amd64-static.tar.xz
+      - run: sudo mv ffmpeg-*/ffmpeg ffmpeg-*/ffprobe /usr/local/bin
       - run: npm install
       - run: npm test
