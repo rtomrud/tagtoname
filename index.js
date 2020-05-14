@@ -1,7 +1,7 @@
 const { execFile } = require("child_process");
 const {
   constants,
-  promises: { access, readdir, rename, stat }
+  promises: { access, readdir, rename, stat },
 } = require("fs");
 const EventEmmiter = require("events");
 const { cpus } = require("os");
@@ -14,7 +14,7 @@ const execFilePromise = promisify(execFile);
 const lockPromise = promisify(lock);
 const unlockPromise = promisify(unlock);
 
-const createSafeRenamer = rename => (oldPath, newPath) =>
+const createSafeRenamer = (rename) => (oldPath, newPath) =>
   oldPath === newPath
     ? newPath
     : access(newPath, constants.F_OK)
@@ -43,8 +43,8 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
     tags
   );
   return selectedTags
-    .map(selectedTag => metadataTags[selectedTag])
-    .filter(element => element != null)
+    .map((selectedTag) => metadataTags[selectedTag])
+    .filter((element) => element != null)
     .join(separator);
 };
 
@@ -75,13 +75,13 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
  * object to the callback
  * - `"complete"`, emitted when all files have been processed
  */
-module.exports = function(
+module.exports = function (
   paths = [],
   {
     keepCase = false,
     noop = false,
     separator = "-",
-    tags = ["ARTIST", "artist", "TITLE", "title"]
+    tags = ["ARTIST", "artist", "TITLE", "title"],
   } = {}
 ) {
   const renameSafely = createSafeRenamer(
@@ -91,12 +91,12 @@ module.exports = function(
   const jobs = [...paths];
   const max = cpus().length * 2;
   let workers = 0;
-  const work = path => {
+  const work = (path) => {
     stat(path)
-      .then(stats =>
+      .then((stats) =>
         stats.isDirectory()
-          ? readdir(path).then(files =>
-              files.forEach(file => jobs.push(join(path, file)))
+          ? readdir(path).then((files) =>
+              files.forEach((file) => jobs.push(join(path, file)))
             )
           : execFilePromise("ffprobe", [
               "-loglevel",
@@ -105,24 +105,24 @@ module.exports = function(
               "json",
               "-show_format",
               "-show_streams",
-              `${path}`
+              `${path}`,
             ])
               .then(
                 ({ stdout }) =>
                   join(
                     dirname(path),
                     slugify(name(JSON.parse(stdout), tags, separator), {
-                      keepCase
+                      keepCase,
                     }) + extname(path)
                   ),
                 ({ stderr }) => Promise.reject(Error(stderr.trim()))
               )
-              .then(newPath => renameSafely(path, newPath))
-              .then(newPath =>
+              .then((newPath) => renameSafely(path, newPath))
+              .then((newPath) =>
                 emmiter.emit(path === newPath ? "abort" : "success", newPath)
               )
       )
-      .catch(error => emmiter.emit("error", error))
+      .catch((error) => emmiter.emit("error", error))
       .then(() => {
         workers -= 1;
         if (jobs.length === 0 && workers === 0) {

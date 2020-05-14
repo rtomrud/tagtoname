@@ -6,7 +6,7 @@ const test = require("../node_modules/tape/index.js");
 
 const cli = join(__dirname, "../bin/cli.js");
 
-const exists = path =>
+const exists = (path) =>
   access(path)
     .then(() => true)
     .catch(() => false);
@@ -20,14 +20,14 @@ const tagtonamePromise = (args, options) =>
       [cli, ...(args ? args.split(/\s+/u) : [])],
       options
     );
-    tags2name.on("close", exitCode => resolve({ stdout, stderr, exitCode }));
-    tags2name.on("error", error => reject(error));
-    tags2name.stdout.on("data", data => stdout.push(data.toString()));
-    tags2name.stderr.on("data", data => stderr.push(data.toString()));
+    tags2name.on("close", (exitCode) => resolve({ stdout, stderr, exitCode }));
+    tags2name.on("error", (error) => reject(error));
+    tags2name.stdout.on("data", (data) => stdout.push(data.toString()));
+    tags2name.stderr.on("data", (data) => stderr.push(data.toString()));
   });
 
-const setup = files =>
-  mkdtemp(join(tmpdir(), "test-")).then(dir =>
+const setup = (files) =>
+  mkdtemp(join(tmpdir(), "test-")).then((dir) =>
     Promise.all(
       Object.entries(files).map(
         ([path, { format: { tags = {} } = {} } = {}]) => {
@@ -36,7 +36,7 @@ const setup = files =>
             ".opus": "libopus",
             ".ogg": "libvorbis",
             ".m4a": "aac",
-            ".mp3": "libmp3lame"
+            ".mp3": "libmp3lame",
           }[extname(path)];
           const containerMetadata = Object.entries(tags)
             .map(([key, value]) => `-metadata ${key}="${value}"`)
@@ -45,17 +45,17 @@ const setup = files =>
           return new Promise((resolve, reject) =>
             exec(
               `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${containerMetadata} ${newPath}`,
-              error => (error ? reject(error) : resolve(newPath))
+              (error) => (error ? reject(error) : resolve(newPath))
             )
           );
         }
       )
-    ).then(paths => [dir, ...paths])
+    ).then((paths) => [dir, ...paths])
   );
 
-const teardown = dir =>
+const teardown = (dir) =>
   readdir(dir)
-    .then(files => Promise.all(files.map(file => unlink(join(dir, file)))))
+    .then((files) => Promise.all(files.map((file) => unlink(join(dir, file)))))
     .then(() => rmdir(dir));
 
 test("cli with --help", async ({ deepEqual, end }) => {
@@ -96,7 +96,7 @@ test("cli with --version", async ({ deepEqual, end }) => {
     {
       stdout: [`tagtoname ${require("../package.json").version}\n`],
       stderr: [],
-      exitCode: 0
+      exitCode: 0,
     },
     "logs the version of tagtoname and ffprobe to stdout and exits with success"
   );
@@ -106,12 +106,14 @@ test("cli with --version", async ({ deepEqual, end }) => {
 test("cli with a file that should be renamed", async ({
   deepEqual,
   equal,
-  end
+  end,
 }) => {
   const [dir, oldPath] = await setup({
     "file.flac": {
-      format: { tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" } }
-    }
+      format: {
+        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
+      },
+    },
   });
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
@@ -128,12 +130,12 @@ test("cli with a file that should be renamed", async ({
 test("cli with options and many files", async ({ deepEqual, equal, end }) => {
   const [dir, oldPath, errorPath, existingPath] = await setup({
     "rename.ogg": {
-      format: { tags: { ALBUM: "Ruun", TITLE: "RUUN", track: "04" } }
+      format: { tags: { ALBUM: "Ruun", TITLE: "RUUN", track: "04" } },
     },
     "duplicate.ogg": {
-      format: { tags: { ALBUM: "Addicted", TITLE: "Numbered!", track: "09" } }
+      format: { tags: { ALBUM: "Addicted", TITLE: "Numbered!", track: "09" } },
     },
-    "Addicted--09--Numbered.ogg": {}
+    "Addicted--09--Numbered.ogg": {},
   });
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
   deepEqual(
@@ -143,7 +145,7 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
     {
       stdout: [`${newPath}\n`],
       stderr: [`${errorPath}: would override ${existingPath}\n`],
-      exitCode: 1
+      exitCode: 1,
     },
     "logs the new path to stdout, logs the error to stderr, and exists with error"
   );
@@ -156,16 +158,16 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
 test("cli with long options and many files", async ({
   deepEqual,
   equal,
-  end
+  end,
 }) => {
   const [dir, oldPath, errorPath, existingPath] = await setup({
     "rename.ogg": {
-      format: { tags: { ALBUM: "Ruun", TITLE: "RUUN", track: "04" } }
+      format: { tags: { ALBUM: "Ruun", TITLE: "RUUN", track: "04" } },
     },
     "duplicate.ogg": {
-      format: { tags: { ALBUM: "Addicted", TITLE: "Numbered!", track: "09" } }
+      format: { tags: { ALBUM: "Addicted", TITLE: "Numbered!", track: "09" } },
     },
-    "Addicted--09--Numbered.ogg": {}
+    "Addicted--09--Numbered.ogg": {},
   });
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
   deepEqual(
@@ -175,7 +177,7 @@ test("cli with long options and many files", async ({
     {
       stdout: [`${newPath}\n`],
       stderr: [`${errorPath}: would override ${existingPath}\n`],
-      exitCode: 1
+      exitCode: 1,
     },
     "logs the new path to stdout, logs the error to stderr, and exists with error"
   );
@@ -188,12 +190,14 @@ test("cli with long options and many files", async ({
 test("cli with one option of each repeatable option", async ({
   deepEqual,
   equal,
-  end
+  end,
 }) => {
   const [dir, oldPath] = await setup({
     "file.ogg": {
-      format: { tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" } }
-    }
+      format: {
+        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
+      },
+    },
   });
   const newPath = resolve(dir, "victim-of-the-past.ogg");
   deepEqual(

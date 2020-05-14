@@ -7,7 +7,7 @@ const opts = getopts(process.argv.slice(2), {
   alias: { k: ["keep-case", "keepCase"], n: "noop", s: "separator", t: "tag" },
   boolean: ["k", "n", "help", "version"],
   string: ["s", "t"],
-  default: { s: "-", t: ["ARTIST", "artist", "TITLE", "title"] }
+  default: { s: "-", t: ["ARTIST", "artist", "TITLE", "title"] },
 });
 
 if (opts.help || (!opts.version && opts._.length === 0)) {
@@ -38,7 +38,7 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
     opts._,
     Object.assign(opts, {
       options: Array.isArray(opts.option) ? opts.option : [opts.option],
-      tags: Array.isArray(opts.tag) ? opts.tag : [opts.tag]
+      tags: Array.isArray(opts.tag) ? opts.tag : [opts.tag],
     })
   );
   renamer.on("abort", console.log);
