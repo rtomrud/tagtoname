@@ -40,8 +40,8 @@ const setup = (files) =>
   mkdtemp(join(tmpdir(), "test-")).then((dir) =>
     Promise.all(
       Object.entries(files).map(
-        ([path, { format: { tags = {} } = {}, streams = [] } = {}]) => {
-          const newPath = join(dir, path);
+        ([basename, { format: { tags = {} } = {}, streams = [] } = {}]) => {
+          const dest = join(dir, basename);
           const inputs =
             streams.length === 0
               ? `-f lavfi -i anullsrc `
@@ -49,15 +49,8 @@ const setup = (files) =>
                   .map(() => `-f lavfi -i anullsrc`)
                   .concat(streams.map((_, i) => `-map ${i}`))
                   .join(" ");
-          const containerMetadata = Object.entries(tags)
+          const container = Object.entries(tags)
             .map(([key, value]) => `-metadata ${key}="${value}"`)
-            .join(" ");
-          const streamMetadata = streams
-            .map(({ tags }, i) =>
-              Object.entries(tags)
-                .map(([key, value]) => `-metadata:s:${i} ${key}="${value}"`)
-                .join(" ")
-            )
             .join(" ");
           const codec = {
             ".flac": "flac",
@@ -65,11 +58,11 @@ const setup = (files) =>
             ".ogg": "libvorbis",
             ".m4a": "aac",
             ".mp3": "libmp3lame",
-          }[extname(path)];
+          }[extname(basename)];
           return new Promise((resolve, reject) =>
             exec(
-              `ffmpeg ${inputs} -t 1 -c:a ${codec} ${containerMetadata} ${streamMetadata} ${newPath}`,
-              (error) => (error ? reject(error) : resolve(newPath))
+              `ffmpeg ${inputs} -t 1 -c:a ${codec} ${container} ${dest}`,
+              (error) => (error ? reject(error) : resolve(dest))
             )
           );
         }
@@ -131,7 +124,7 @@ test("tagtoname with a file that should be renamed", async ({
     "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
+  equal(await exists(newPath), true, "creates the new path");
   await teardown(dir);
   end();
 });
@@ -209,7 +202,7 @@ test("tagtoname with the keepCase option", async ({
     "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
+  equal(await exists(newPath), true, "creates the new path");
   await teardown(dir);
   end();
 });
@@ -253,7 +246,7 @@ test("tagtoname with the separator option", async ({
     "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
+  equal(await exists(newPath), true, "creates the new path");
   await teardown(dir);
   end();
 });
@@ -273,12 +266,12 @@ test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
     "emits a success event with the new path"
   );
   equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
+  equal(await exists(newPath), true, "creates the new path");
   await teardown(dir);
   end();
 });
 
-test("tagtoname with a file that would override another file on success", async ({
+test("tagtoname with a file that would override another file", async ({
   deepEqual,
   equal,
   end,
@@ -305,17 +298,10 @@ test("tagtoname with a file that would override another file on success", async 
   end();
 });
 
-test("tagtoname with a file unreadable by ffprobe", async ({
-  equal,
-  deepEqual,
-  end,
-}) => {
+test("tagtoname with a non-media file", async ({ equal, deepEqual, end }) => {
   const dir = await mkdtemp(join(tmpdir(), "test-"));
   const oldPath = join(dir, "metadata.json");
-  await writeFile(
-    oldPath,
-    '{ "album": "Mariner", "artist": "Cult of Luna & Julie Christmas", "tracks": 5 }'
-  );
+  await writeFile(oldPath, "{}");
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
