@@ -1,6 +1,6 @@
 {
   "name": "tagtoname",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Renames audio or video files using their metadata tags",
   "keywords": [
     "ffmpeg",
