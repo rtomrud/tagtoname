@@ -1,7 +1,7 @@
 # tagtoname
 
-[![npm version](https://badgen.net/npm/v/tagtoname)](https://www.npmjs.com/package/tagtoname)
 [![build status](https://github.com/rtomrud/tagtoname/workflows/build/badge.svg)](https://github.com/rtomrud/tagtoname/actions?query=branch%3Amaster+workflow%3Abuild)
+[![npm version](https://badgen.net/npm/v/tagtoname)](https://www.npmjs.com/package/tagtoname)
 
 Renames audio or video files using their metadata tags
 
