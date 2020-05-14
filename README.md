@@ -1,6 +1,6 @@
 # tagtoname
 
-[![npm version](https://img.shields.io/npm/v/tagtoname.svg?style=flat-square)](https://www.npmjs.com/package/tagtoname)
+[![npm version](https://badgen.net/npm/v/tagtoname)](https://www.npmjs.com/package/tagtoname)
 [![build status](https://github.com/rtomrud/tagtoname/workflows/build/badge.svg)](https://github.com/rtomrud/tagtoname/actions?query=branch%3Amaster+workflow%3Abuild)
 
 Renames audio or video files using their metadata tags
