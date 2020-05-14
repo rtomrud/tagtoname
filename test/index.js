@@ -214,26 +214,6 @@ test("tagtoname with the keepCase option", async ({
   end();
 });
 
-test("tagtoname with the max option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
-  const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-  deepEqual(
-    await tagtonamePromise([oldPath], { max: 1 }),
-    { success: [newPath], abort: [], error: [] },
-    "emits a success event with the new path"
-  );
-  equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
-  await teardown(dir);
-  end();
-});
-
 test("tagtoname with the noop option", async ({ deepEqual, equal, end }) => {
   const [dir, oldPath] = await setup({
     "file.flac": {
@@ -250,56 +230,6 @@ test("tagtoname with the noop option", async ({ deepEqual, equal, end }) => {
   );
   equal(await exists(oldPath), true, "does not delete the old path");
   equal(await exists(newPath), false, "does not create the new path");
-  await teardown(dir);
-  end();
-});
-
-test("tagtoname with the options option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.ogg": {
-      streams: [
-        {
-          tags: {
-            ARTIST: "Orchestra of State Opera Plovdiv",
-            TITLE: "Victim Of The Past (With Orchestra)",
-          },
-        },
-        {
-          tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-        },
-      ],
-    },
-  });
-  const newPath = resolve(dir, "paradise-lost-victim-of-the-past.ogg");
-  deepEqual(
-    await tagtonamePromise([oldPath], {
-      options: ["-show_streams", "-select_streams a:1"],
-    }),
-    { success: [newPath], abort: [], error: [] },
-    "emits a success event with the new path"
-  );
-  equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
-  await teardown(dir);
-  end();
-});
-
-test("tagtoname with the path option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
-  const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
-  deepEqual(
-    await tagtonamePromise([oldPath], { path: "ffprobe" }),
-    { success: [newPath], abort: [], error: [] },
-    "emits a success event with the new path"
-  );
-  equal(await exists(oldPath), false, "deletes the old path");
-  equal(await exists(newPath), true, "create the new path");
   await teardown(dir);
   end();
 });
