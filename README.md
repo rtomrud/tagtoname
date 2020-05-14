@@ -104,4 +104,4 @@ tagtoname(["/path/to/folder/"], { tags: ["artist", "title"] })
 
 ## License
 
-[MIT License](./LICENSE)
+[MIT](./LICENSE)
