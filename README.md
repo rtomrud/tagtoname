@@ -5,11 +5,6 @@
 
 Renames audio or video files using their metadata tags
 
-- Renames to names [safe for URLs and filenames](https://github.com/rtomrud/standard-slugify) by default, by transliterating or deleting unsafe characters
-- Allows configuring the tags, their case, and the separator characters of the new name
-- Has a dry run option (noop), so you can see the results before modifying the file system
-- Uses [ffprobe](https://ffmpeg.org/ffprobe.html), so it supports most formats and containers
-
 ## Installing
 
 Make sure you have [ffprobe](https://ffmpeg.org/download.html) installed (it comes with [FFmpeg](https://ffmpeg.org)), and run:
