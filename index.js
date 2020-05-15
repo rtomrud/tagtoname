@@ -1,16 +1,14 @@
-const { execFile } = require("child_process");
+const EventEmmiter = require("events");
 const {
   constants,
   promises: { access, rename },
 } = require("fs");
-const EventEmmiter = require("events");
-const { cpus } = require("os");
 const { basename, dirname, extname, join } = require("path");
 const { promisify } = require("util");
 const { lock, unlock } = require("lockfile");
+const { parseFile } = require("music-metadata");
 const slugify = require("standard-slugify");
 
-const execFilePromise = promisify(execFile);
 const lockPromise = promisify(lock);
 const unlockPromise = promisify(unlock);
 
@@ -34,40 +32,24 @@ const renameWithLock = (oldPath, newPath) => {
     .then(() => unlockPromise(pathLock));
 };
 
-const readMetadata = (path) =>
-  execFilePromise("ffprobe", [
-    "-loglevel",
-    "error",
-    "-print_format",
-    "json",
-    "-show_format",
-    "-show_streams",
-    `${path}`,
-  ]).then(
-    ({ stdout }) => {
-      const {
-        format: { tags = {} },
-        streams,
-      } = JSON.parse(stdout);
-      return Object.assign(
-        streams.reduce(
-          (streamTags, { tags }) => Object.assign(streamTags, tags),
-          {}
-        ),
-        tags
-      );
-    },
-    ({ stderr }) => Promise.reject(Error(stderr.trim()))
-  );
+const readTags = (path) =>
+  parseFile(path)
+    .then(({ common }) => common)
+    .catch(() => Promise.reject(Error(`${path}: could not read metadata`)));
 
-const name = (metadata, selectedTags, separator) =>
-  selectedTags
-    .map((selectedTag) => metadata[selectedTag])
+const name = (srcTags, tags, separator) =>
+  tags
+    .map((tags) => {
+      const value = srcTags[tags];
+      return typeof value === "object" ? Object.values(value)[0] : value;
+    })
     .filter((element) => element != null)
     .join(separator);
 
 /**
- * Renames audio or video files using their metadata tags.
+ * Renames audio files using the metadata tags.
+ *
+ * The first argument is an array of `paths` to the files to be renamed.
  *
  * The second argument is an options object with the following properties:
  *
@@ -78,7 +60,7 @@ const name = (metadata, selectedTags, separator) =>
  * - `separator`: The separator used to split the tags in the name, defaults to
  * `"-"`
  * - `tags`: An array of tags to use in the new name of the file, defaults to
- * `["ARTIST", "artist", "TITLE", "title"]`
+ * `["artist", "title"]`
  *
  * Returns an `EventEmmiter` object with the following events:
  *
@@ -96,7 +78,7 @@ module.exports = function (
     keepCase = false,
     noop = false,
     separator = "-",
-    tags = ["ARTIST", "artist", "TITLE", "title"],
+    tags = ["artist", "title"],
   } = {}
 ) {
   const renameSafely = createSafeRenamer(
@@ -104,28 +86,23 @@ module.exports = function (
   );
   const emmiter = new EventEmmiter();
   const jobs = [...paths];
-  const work = (path) =>
-    path == null
-      ? Promise.resolve()
-      : readMetadata(path)
-          .then((metadata) =>
-            renameSafely(
-              path,
-              join(
-                dirname(path),
-                slugify(name(metadata, tags, separator), { keepCase }) +
-                  extname(path)
-              )
-            )
+  const work = (src) =>
+    readTags(src)
+      .then((srcTags) =>
+        renameSafely(
+          src,
+          join(
+            dirname(src),
+            slugify(name(srcTags, tags, separator), { keepCase }) + extname(src)
           )
-          .then((newPath) =>
-            emmiter.emit(path === newPath ? "abort" : "success", newPath)
-          )
-          .catch((error) => emmiter.emit("error", error))
-          .then(() => work(jobs.pop()));
+        )
+      )
+      .then((dest) => emmiter.emit(src === dest ? "abort" : "success", dest))
+      .catch((error) => emmiter.emit("error", error))
+      .then(() => (jobs.length > 0 ? work(jobs.pop()) : undefined));
 
   const workers = [];
-  const workerCount = cpus().length;
+  const workerCount = 4;
   while (jobs.length > 0 && workers.length < workerCount) {
     workers.push(work(jobs.pop()));
   }

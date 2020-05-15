@@ -3,11 +3,9 @@
 [![build status](https://github.com/rtomrud/tagtoname/workflows/build/badge.svg)](https://github.com/rtomrud/tagtoname/actions?query=branch%3Amaster+workflow%3Abuild)
 [![npm version](https://badgen.net/npm/v/tagtoname)](https://www.npmjs.com/package/tagtoname)
 
-Renames audio or video files using their metadata tags
+Renames audio files using the metadata tags
 
 ## Installing
-
-Make sure you have [ffprobe](https://ffmpeg.org/download.html) installed (it comes with [FFmpeg](https://ffmpeg.org)), and run:
 
 ```bash
 npm install tagtoname
@@ -18,7 +16,7 @@ npm install tagtoname
 ```
 Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
 
-Renames file(s) to a URL-safe name using the metadata tag(s).
+Renames audio files using the metadata tags.
 
 Options:
 
@@ -27,13 +25,15 @@ Options:
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
                              defaults to -s-
   -t, --tag=TAG              Append TAG(s) to the new name;
-                             defaults to -t ARTIST -t artist -t TITLE -t title
+                             defaults to -t artist -t title
   --help                     Show help
   --version                  Output the version number
 
-For example, by default a file with the "mp3" ext, the ARTIST tag "Beethoven",
-and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
+For example, by default a file with the "mp3" ext, the artist tag "Beethoven",
+and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
 ```
+
+See [the list of supported tags](https://github.com/Borewit/music-metadata/blob/v6.4.0/doc/common_metadata.md#common-metadata) (the `-t` option accepts any value from the "Common tag" column).
 
 ### Examples
 
@@ -71,14 +71,16 @@ tagtoname -t title -t year file.mp4
 
 ### `tagtoname(paths, options)`
 
-Renames the audio or video files using their metadata tags.
+Renames audio files using the metadata tags.
+
+The first argument is an array of `paths` to the files to be renamed.
 
 The second argument is an options object with the following properties:
 
 - `keepCase`: Keep the original case of the tags when renaming, defaults to `false`
 - `noop`: Whether to perform a dry run and not rename files, defaults to `false`
 - `separator`: The separator used to split the tags in the name, defaults to `"-"`
-- `tags`: An array of tags to use in the new name of the file, defaults to `["ARTIST", "artist", "TITLE", "title"]`
+- `tags`: An array of tags to use in the new name of the file, defaults to `["artist", "title"]`
 
 Returns an [`EventEmmiter`](https://nodejs.org/api/events.html#events_class_eventemitter) object with the following events:
 

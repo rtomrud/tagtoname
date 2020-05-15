@@ -1,15 +1,13 @@
-const { exec } = require("child_process");
 const {
   access,
+  copyFile,
   mkdtemp,
   readdir,
   rmdir,
-  stat,
   unlink,
-  writeFile,
 } = require("fs").promises;
 const { tmpdir } = require("os");
-const { extname, join, resolve } = require("path");
+const { basename, join, resolve } = require("path");
 const test = require("../node_modules/tape/index.js");
 const tagtoname = require("../index.js");
 
@@ -36,81 +34,34 @@ const tagtonamePromise = (paths, options) =>
     renamer.on("error", (path) => error.push(path));
   });
 
-const setup = (basenames) =>
+const setup = (srcs) =>
   mkdtemp(join(tmpdir(), "test-")).then((dir) =>
     Promise.all(
-      Object.entries(basenames).map(
-        ([basename, { format: { tags = {} } = {} } = {}]) => {
-          const dest = join(dir, basename);
-          const codec = {
-            ".flac": "flac",
-            ".m4a": "aac",
-            ".mp3": "libmp3lame",
-            ".ogg": "libvorbis",
-            ".opus": "libopus",
-          }[extname(basename)];
-          const container = Object.entries(tags)
-            .map(([key, value]) => `-metadata ${key}="${value}"`)
-            .join(" ");
-          return new Promise((resolve, reject) =>
-            exec(
-              `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${container} ${dest}`,
-              (error) => (error ? reject(error) : resolve(dest))
-            )
-          );
-        }
-      )
-    ).then((paths) => [dir, ...paths])
+      srcs.map((src) => {
+        const dest = join(dir, basename(src));
+        return copyFile(join(__dirname, src), dest).then(() => dest);
+      })
+    ).then((dests) => [dir, ...dests])
   );
 
 const teardown = (dir) =>
   readdir(dir)
-    .then((files) =>
-      Promise.all(
-        files.map((file) => {
-          const path = join(dir, file);
-          return stat(path).then((stats) =>
-            (stats.isDirectory() ? teardown : unlink)(path)
-          );
-        })
-      )
-    )
+    .then((files) => Promise.all(files.map((file) => unlink(join(dir, file)))))
     .then(() => rmdir(dir));
 
 test("tagtoname with no arguments", async ({ deepEqual, end }) => {
   deepEqual(
     await tagtonamePromise(),
-    { abort: [], success: [], error: [] },
+    { success: [], abort: [], error: [] },
     "emits only a done event"
   );
   end();
 });
 
-test("tagtoname with a non-string path", async ({ deepEqual, end }) => {
-  deepEqual(
-    await tagtonamePromise([false]),
-    {
-      abort: [],
-      success: [],
-      error: [Error("false: No such file or directory")],
-    },
-    "emits an error event of type TypeError"
-  );
-  end();
-});
-
-test("tagtoname with a file that should be renamed", async ({
-  deepEqual,
-  equal,
-  end,
-}) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
+test("tagtoname with a file", async ({ deepEqual, equal, end }) => {
+  const [dir, oldPath] = await setup([
+    "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
+  ]);
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath]),
@@ -123,18 +74,14 @@ test("tagtoname with a file that should be renamed", async ({
   end();
 });
 
-test("tagtoname with a properly named file", async ({
+test("tagtoname with a file that should not be renamed", async ({
   deepEqual,
   equal,
   end,
 }) => {
-  const [dir, oldPath] = await setup({
-    "paradise-lost-victim-of-the-past.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
+  const [dir, oldPath] = await setup([
+    "./samples/paradise-lost-victim-of-the-past.flac",
+  ]);
   deepEqual(
     await tagtonamePromise([oldPath]),
     { success: [], abort: [oldPath], error: [] },
@@ -145,29 +92,17 @@ test("tagtoname with a properly named file", async ({
   end();
 });
 
-test("tagtoname with a path to a folder with properly named files", async ({
+test("tagtoname with files that should not be renamed", async ({
   deepEqual,
   end,
 }) => {
-  const [dir, ...oldPaths] = await setup({
-    "carnivore-five-billion-dead.opus": {
-      format: { tags: { ARTIST: "Carnivore", TITLE: "Five Billion Dead" } },
-    },
-    "killing-joke-on-all-hallows-eve.mp3": {
-      format: {
-        tags: { artist: "Killing Joke", title: "On All Hallow's Eve" },
-      },
-    },
-    "mr-bungle-quote-unquote.ogg": {
-      format: { tags: { ARTIST: "Mr. Bungle", TITLE: "Quote Unquote" } },
-    },
-    "strapping-young-lad-skeksis.m4a": {
-      format: { tags: { artist: "Strapping Young Lad", title: "Skeksis" } },
-    },
-    "voivod-tornado.flac": {
-      format: { tags: { ARTIST: "Voivod", TITLE: "Tornado" } },
-    },
-  });
+  const [dir, ...oldPaths] = await setup([
+    "./samples/carnivore-five-billion-dead.opus",
+    "./samples/killing-joke-on-all-hallows-eve.mp3",
+    "./samples/mr-bungle-quote-unquote.ogg",
+    "./samples/strapping-young-lad-skeksis.m4a",
+    "./samples/voivod-tornado.flac",
+  ]);
   deepEqual(
     await tagtonamePromise(oldPaths),
     { success: [], abort: oldPaths, error: [] },
@@ -182,13 +117,9 @@ test("tagtoname with the keepCase option", async ({
   equal,
   end,
 }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
+  const [dir, oldPath] = await setup([
+    "./samples/paradise-lost-victim-of-the-past.flac",
+  ]);
   const newPath = resolve(dir, "Paradise-Lost-Victim-Of-The-Past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { keepCase: true }),
@@ -202,13 +133,9 @@ test("tagtoname with the keepCase option", async ({
 });
 
 test("tagtoname with the noop option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
+  const [dir, oldPath] = await setup([
+    "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
+  ]);
   const newPath = resolve(dir, "paradise-lost-victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { noop: true }),
@@ -226,13 +153,9 @@ test("tagtoname with the separator option", async ({
   equal,
   end,
 }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
+  const [dir, oldPath] = await setup([
+    "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
+  ]);
   const newPath = resolve(dir, "paradise-lost---victim-of-the-past.flac");
   deepEqual(
     await tagtonamePromise([oldPath], { separator: "---" }),
@@ -246,16 +169,10 @@ test("tagtoname with the separator option", async ({
 });
 
 test("tagtoname with the tags option", async ({ deepEqual, equal, end }) => {
-  const [dir, oldPath] = await setup({
-    "file.flac": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-  });
-  const newPath = resolve(dir, "victim-of-the-past-paradise-lost.flac");
+  const [dir, oldPath] = await setup(["./samples/9-Addicted-Numbered.ogg"]);
+  const newPath = resolve(dir, "addicted-9-numbered.ogg");
   deepEqual(
-    await tagtonamePromise([oldPath], { tags: ["TITLE", "ARTIST"] }),
+    await tagtonamePromise([oldPath], { tags: ["album", "track", "title"] }),
     { success: [newPath], abort: [], error: [] },
     "emits a success event with the new path"
   );
@@ -270,14 +187,10 @@ test("tagtoname with a file that would override another file", async ({
   equal,
   end,
 }) => {
-  const [dir, oldPath, existingFile] = await setup({
-    "file.mp3": {
-      format: {
-        tags: { ARTIST: "Paradise Lost", TITLE: "Victim Of The Past" },
-      },
-    },
-    "paradise-lost-victim-of-the-past.mp3": {},
-  });
+  const [dir, oldPath, existingFile] = await setup([
+    "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
+    "./samples/paradise-lost-victim-of-the-past.flac",
+  ]);
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
@@ -292,20 +205,38 @@ test("tagtoname with a file that would override another file", async ({
   end();
 });
 
-test("tagtoname with a non-media file", async ({ equal, deepEqual, end }) => {
-  const dir = await mkdtemp(join(tmpdir(), "test-"));
-  const oldPath = join(dir, "metadata.json");
-  await writeFile(oldPath, "{}");
+test("tagtoname with a file without metadata", async ({
+  equal,
+  deepEqual,
+  end,
+}) => {
+  const [dir, oldPath] = await setup(["./samples/empty"]);
   deepEqual(
     await tagtonamePromise([oldPath]),
     {
       success: [],
       abort: [],
-      error: [Error(`${oldPath}: Invalid data found when processing input`)],
+      error: [Error(`${oldPath}: could not read metadata`)],
     },
     "emits an error event with the path that caused the error"
   );
   equal(await exists(oldPath), true, "does not delete the old path");
+  await teardown(dir);
+  end();
+});
+
+test("tagtoname with a missing path", async ({ deepEqual, end }) => {
+  const [dir] = await setup([]);
+  const path = join(dir, "null");
+  deepEqual(
+    await tagtonamePromise([path]),
+    {
+      success: [],
+      abort: [],
+      error: [Error(`${path}: could not read metadata`)],
+    },
+    "emits an error event of type TypeError"
+  );
   await teardown(dir);
   end();
 });

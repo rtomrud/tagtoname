@@ -1,14 +1,14 @@
 {
   "name": "tagtoname",
   "version": "2.0.1",
-  "description": "Renames audio or video files using their metadata tags",
+  "description": "Renames audio files using the metadata tags",
   "keywords": [
-    "ffmpeg",
-    "ffprobe",
+    "audio",
     "file",
     "filename",
     "media",
     "metadata",
+    "music",
     "rename",
     "tag"
   ],
@@ -37,6 +37,7 @@
   "dependencies": {
     "getopts": "2.2.5",
     "lockfile": "1.0.4",
+    "music-metadata": "6.4.0",
     "standard-slugify": "2.0.1"
   },
   "devDependencies": {
