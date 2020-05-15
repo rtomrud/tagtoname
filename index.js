@@ -1,7 +1,7 @@
 const { execFile } = require("child_process");
 const {
   constants,
-  promises: { access, readdir, rename, stat },
+  promises: { access, rename },
 } = require("fs");
 const EventEmmiter = require("events");
 const { cpus } = require("os");
@@ -51,9 +51,6 @@ const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
 /**
  * Renames audio or video files using their metadata tags.
  *
- * The given `paths` can be paths to files or directories, in which case it
- * recursively traverses them.
- *
  * The second argument is an options object with the following properties:
  *
  * - `keepCase`: Keep the original case of the tags when renaming, defaults to
@@ -89,61 +86,41 @@ module.exports = function (
   );
   const emmiter = new EventEmmiter();
   const jobs = [...paths];
-  const max = cpus().length * 2;
-  let workers = 0;
-  const work = (path) => {
-    stat(path)
-      .then((stats) =>
-        stats.isDirectory()
-          ? readdir(path).then((files) =>
-              files.forEach((file) => jobs.push(join(path, file)))
-            )
-          : execFilePromise("ffprobe", [
-              "-loglevel",
-              "error",
-              "-print_format",
-              "json",
-              "-show_format",
-              "-show_streams",
-              `${path}`,
-            ])
-              .then(
-                ({ stdout }) =>
-                  join(
-                    dirname(path),
-                    slugify(name(JSON.parse(stdout), tags, separator), {
-                      keepCase,
-                    }) + extname(path)
-                  ),
-                ({ stderr }) => Promise.reject(Error(stderr.trim()))
-              )
-              .then((newPath) => renameSafely(path, newPath))
-              .then((newPath) =>
-                emmiter.emit(path === newPath ? "abort" : "success", newPath)
-              )
-      )
-      .catch((error) => emmiter.emit("error", error))
-      .then(() => {
-        workers -= 1;
-        if (jobs.length === 0 && workers === 0) {
-          emmiter.emit("complete");
-        } else {
-          while (jobs.length > 0 && workers < max) {
-            work(jobs.pop());
-            workers += 1;
-          }
-        }
-      });
-  };
+  const work = (path) =>
+    path == null
+      ? Promise.resolve()
+      : execFilePromise("ffprobe", [
+          "-loglevel",
+          "error",
+          "-print_format",
+          "json",
+          "-show_format",
+          "-show_streams",
+          `${path}`,
+        ])
+          .then(
+            ({ stdout }) =>
+              join(
+                dirname(path),
+                slugify(name(JSON.parse(stdout), tags, separator), {
+                  keepCase,
+                }) + extname(path)
+              ),
+            ({ stderr }) => Promise.reject(Error(stderr.trim()))
+          )
+          .then((newPath) => renameSafely(path, newPath))
+          .then((newPath) =>
+            emmiter.emit(path === newPath ? "abort" : "success", newPath)
+          )
+          .catch((error) => emmiter.emit("error", error))
+          .then(() => work(jobs.pop()));
 
-  if (jobs.length > 0 && max > 0) {
-    while (jobs.length > 0 && workers < max) {
-      work(jobs.pop());
-      workers += 1;
-    }
-  } else {
-    setTimeout(() => emmiter.emit("complete"), 0);
+  const workers = [];
+  const max = cpus().length * 2;
+  while (jobs.length > 0 && workers.length < max) {
+    workers.push(work(jobs.pop()));
   }
 
+  Promise.all(workers).then(() => emmiter.emit("complete"));
   return emmiter;
 };

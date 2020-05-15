@@ -86,13 +86,14 @@ test("tagtoname with no arguments", async ({ deepEqual, end }) => {
   end();
 });
 
-test("tagtoname with a non-string path", async ({ equal, end }) => {
-  const {
-    error: [error],
-  } = await tagtonamePromise([false]);
-  equal(
-    Object.prototype.isPrototypeOf.call(TypeError.prototype, error),
-    true,
+test("tagtoname with a non-string path", async ({ deepEqual, end }) => {
+  deepEqual(
+    await tagtonamePromise([false]),
+    {
+      abort: [],
+      success: [],
+      error: [Error("false: No such file or directory")],
+    },
     "emits an error event of type TypeError"
   );
   end();
@@ -168,7 +169,7 @@ test("tagtoname with a path to a folder with properly named files", async ({
     },
   });
   deepEqual(
-    await tagtonamePromise([dir]),
+    await tagtonamePromise(oldPaths),
     { success: [], abort: oldPaths, error: [] },
     "emits an abort event for each properly named file"
   );

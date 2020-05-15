@@ -12,9 +12,9 @@ const opts = getopts(process.argv.slice(2), {
 
 if (opts.help || (!opts.version && opts._.length === 0)) {
   const log = opts.help ? console.log : console.error;
-  log(`Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
+  log(`Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
 
-Renames the files at path(s) to a URL-safe name using the metadata tag(s).
+Renames file(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 

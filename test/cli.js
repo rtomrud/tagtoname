@@ -59,9 +59,9 @@ const teardown = (dir) =>
     .then(() => rmdir(dir));
 
 test("cli with --help", async ({ deepEqual, end }) => {
-  const helpMessage = `Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
+  const helpMessage = `Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
 
-Renames the files at path(s) to a URL-safe name using the metadata tag(s).
+Renames file(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 

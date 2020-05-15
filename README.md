@@ -16,9 +16,9 @@ npm install tagtoname
 ## CLI
 
 ```
-Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... path...
+Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
 
-Renames the files at path(s) to a URL-safe name using the metadata tag(s).
+Renames file(s) to a URL-safe name using the metadata tag(s).
 
 Options:
 
@@ -43,8 +43,8 @@ and the TITLE tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
 # "Ode to Joy", by default it will be renamed to "beethoven-ode-to-joy.mp3".
 tagtoname file.mp3
 
-# Rename all files in a folder (recursively).
-tagtoname folder
+# Rename all files in a folder.
+tagtoname folder/*
 ```
 
 ```bash
@@ -54,7 +54,7 @@ tagtoname folder
 tagtoname -k file.mp3
 
 # Dry run, output what would happen if we were to rename all files in a folder.
-tagtoname -n folder
+tagtoname -n folder/*
 
 # Rename a file using a custom separator.
 # For example, if the file has the "artist" tag "Debussy", and the "title" tag
@@ -72,9 +72,6 @@ tagtoname -t title -t year file.mp4
 ### `tagtoname(paths, options)`
 
 Renames the audio or video files using their metadata tags.
-
-The given `paths` can be files or directories, in which case it recursively
-traverses them.
 
 The second argument is an options object with the following properties:
 
@@ -95,8 +92,8 @@ Returns an [`EventEmmiter`](https://nodejs.org/api/events.html#events_class_even
 ```js
 import tagtoname from "tagtoname";
 
-// Rename the files at /path/to/folder/ using the "artist" and "title" tags
-tagtoname(["/path/to/folder/"], { tags: ["artist", "title"] })
+// Rename files using the "title" and "year" tags
+tagtoname(["file1.mp4", "file2.mp4"], { tags: ["title", "year"] })
   .on("success", newPath => console.log(newPath))
   .on("abort", oldPath => console.log(`${oldPath} (unchanged)`))
   .on("error", error => console.error(error.message));
