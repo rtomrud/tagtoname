@@ -36,32 +36,25 @@ const tagtonamePromise = (paths, options) =>
     renamer.on("error", (path) => error.push(path));
   });
 
-const setup = (files) =>
+const setup = (basenames) =>
   mkdtemp(join(tmpdir(), "test-")).then((dir) =>
     Promise.all(
-      Object.entries(files).map(
-        ([basename, { format: { tags = {} } = {}, streams = [] } = {}]) => {
+      Object.entries(basenames).map(
+        ([basename, { format: { tags = {} } = {} } = {}]) => {
           const dest = join(dir, basename);
-          const inputs =
-            streams.length === 0
-              ? `-f lavfi -i anullsrc `
-              : streams
-                  .map(() => `-f lavfi -i anullsrc`)
-                  .concat(streams.map((_, i) => `-map ${i}`))
-                  .join(" ");
+          const codec = {
+            ".flac": "flac",
+            ".m4a": "aac",
+            ".mp3": "libmp3lame",
+            ".ogg": "libvorbis",
+            ".opus": "libopus",
+          }[extname(basename)];
           const container = Object.entries(tags)
             .map(([key, value]) => `-metadata ${key}="${value}"`)
             .join(" ");
-          const codec = {
-            ".flac": "flac",
-            ".opus": "libopus",
-            ".ogg": "libvorbis",
-            ".m4a": "aac",
-            ".mp3": "libmp3lame",
-          }[extname(basename)];
           return new Promise((resolve, reject) =>
             exec(
-              `ffmpeg ${inputs} -t 1 -c:a ${codec} ${container} ${dest}`,
+              `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${container} ${dest}`,
               (error) => (error ? reject(error) : resolve(dest))
             )
           );

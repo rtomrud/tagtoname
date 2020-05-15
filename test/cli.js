@@ -26,26 +26,26 @@ const tagtonamePromise = (args, options) =>
     tags2name.stderr.on("data", (data) => stderr.push(data.toString()));
   });
 
-const setup = (files) =>
+const setup = (basenames) =>
   mkdtemp(join(tmpdir(), "test-")).then((dir) =>
     Promise.all(
-      Object.entries(files).map(
-        ([path, { format: { tags = {} } = {} } = {}]) => {
+      Object.entries(basenames).map(
+        ([basename, { format: { tags = {} } = {} } = {}]) => {
+          const dest = join(dir, basename);
           const codec = {
             ".flac": "flac",
-            ".opus": "libopus",
-            ".ogg": "libvorbis",
             ".m4a": "aac",
             ".mp3": "libmp3lame",
-          }[extname(path)];
-          const containerMetadata = Object.entries(tags)
+            ".ogg": "libvorbis",
+            ".opus": "libopus",
+          }[extname(basename)];
+          const container = Object.entries(tags)
             .map(([key, value]) => `-metadata ${key}="${value}"`)
             .join(" ");
-          const newPath = join(dir, path);
           return new Promise((resolve, reject) =>
             exec(
-              `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${containerMetadata} ${newPath}`,
-              (error) => (error ? reject(error) : resolve(newPath))
+              `ffmpeg -f lavfi -i anullsrc -t 1 -c:a ${codec} ${container} ${dest}`,
+              (error) => (error ? reject(error) : resolve(dest))
             )
           );
         }
@@ -140,7 +140,7 @@ test("cli with options and many files", async ({ deepEqual, equal, end }) => {
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
   deepEqual(
     await tagtonamePromise(
-      `-k -m 1 -n -o-show_streams -o-select_streams -o a:0 -p ffprobe -s-- -t ALBUM -t track -t TITLE ${oldPath} ${errorPath}`
+      `-k -n -s-- -t ALBUM -t track -t TITLE ${oldPath} ${errorPath}`
     ),
     {
       stdout: [`${newPath}\n`],
@@ -172,7 +172,7 @@ test("cli with long options and many files", async ({
   const newPath = `${join(dirname(oldPath), "Ruun--04--RUUN.ogg")}`;
   deepEqual(
     await tagtonamePromise(
-      `--keep-case --max=1 --noop --option=-show_streams --option=-select_streams --option=a:0 --path=ffprobe --separator=-- --tag=ALBUM --tag=track --tag=TITLE ${oldPath} ${errorPath}`
+      `--keep-case --noop --separator=-- --tag=ALBUM --tag=track --tag=TITLE ${oldPath} ${errorPath}`
     ),
     {
       stdout: [`${newPath}\n`],
@@ -187,11 +187,7 @@ test("cli with long options and many files", async ({
   end();
 });
 
-test("cli with one option of each repeatable option", async ({
-  deepEqual,
-  equal,
-  end,
-}) => {
+test("cli with only one -t option", async ({ deepEqual, equal, end }) => {
   const [dir, oldPath] = await setup({
     "file.ogg": {
       format: {
@@ -201,7 +197,7 @@ test("cli with one option of each repeatable option", async ({
   });
   const newPath = resolve(dir, "victim-of-the-past.ogg");
   deepEqual(
-    await tagtonamePromise(`-o-show_streams -t TITLE ${oldPath}`),
+    await tagtonamePromise(`-t TITLE ${oldPath}`),
     { stdout: [`${newPath}\n`], stderr: [], exitCode: 0 },
     "logs the new path to stdout and exits with success"
   );
