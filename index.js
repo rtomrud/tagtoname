@@ -116,8 +116,8 @@ module.exports = function (
           .then(() => work(jobs.pop()));
 
   const workers = [];
-  const max = cpus().length * 2;
-  while (jobs.length > 0 && workers.length < max) {
+  const workerCount = cpus().length;
+  while (jobs.length > 0 && workers.length < workerCount) {
     workers.push(work(jobs.pop()));
   }
 
