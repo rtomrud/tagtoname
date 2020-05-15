@@ -34,19 +34,37 @@ const renameWithLock = (oldPath, newPath) => {
     .then(() => unlockPromise(pathLock));
 };
 
-const name = ({ format: { tags = {} }, streams }, selectedTags, separator) => {
-  const metadataTags = Object.assign(
-    streams.reduce(
-      (streamTags, { tags }) => Object.assign(streamTags, tags),
-      {}
-    ),
-    tags
+const readMetadata = (path) =>
+  execFilePromise("ffprobe", [
+    "-loglevel",
+    "error",
+    "-print_format",
+    "json",
+    "-show_format",
+    "-show_streams",
+    `${path}`,
+  ]).then(
+    ({ stdout }) => {
+      const {
+        format: { tags = {} },
+        streams,
+      } = JSON.parse(stdout);
+      return Object.assign(
+        streams.reduce(
+          (streamTags, { tags }) => Object.assign(streamTags, tags),
+          {}
+        ),
+        tags
+      );
+    },
+    ({ stderr }) => Promise.reject(Error(stderr.trim()))
   );
-  return selectedTags
-    .map((selectedTag) => metadataTags[selectedTag])
+
+const name = (metadata, selectedTags, separator) =>
+  selectedTags
+    .map((selectedTag) => metadata[selectedTag])
     .filter((element) => element != null)
     .join(separator);
-};
 
 /**
  * Renames audio or video files using their metadata tags.
@@ -89,26 +107,17 @@ module.exports = function (
   const work = (path) =>
     path == null
       ? Promise.resolve()
-      : execFilePromise("ffprobe", [
-          "-loglevel",
-          "error",
-          "-print_format",
-          "json",
-          "-show_format",
-          "-show_streams",
-          `${path}`,
-        ])
-          .then(
-            ({ stdout }) =>
+      : readMetadata(path)
+          .then((metadata) =>
+            renameSafely(
+              path,
               join(
                 dirname(path),
-                slugify(name(JSON.parse(stdout), tags, separator), {
-                  keepCase,
-                }) + extname(path)
-              ),
-            ({ stderr }) => Promise.reject(Error(stderr.trim()))
+                slugify(name(metadata, tags, separator), { keepCase }) +
+                  extname(path)
+              )
+            )
           )
-          .then((newPath) => renameSafely(path, newPath))
           .then((newPath) =>
             emmiter.emit(path === newPath ? "abort" : "success", newPath)
           )
