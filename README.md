@@ -71,34 +71,43 @@ tagtoname -t title -t year file.mp4
 
 ### `tagtoname(paths, options)`
 
-Renames audio files using the metadata tags.
+Renames an audio file using its metadata tags.
 
-The first argument is an array of `paths` to the files to be renamed.
+The first argument is the `path` of the file to be renamed.
 
 The second argument is an options object with the following properties:
 
 - `keepCase`: Keep the original case of the tags when renaming, defaults to `false`
-- `noop`: Whether to perform a dry run and not rename files, defaults to `false`
-- `separator`: The separator used to split the tags in the name, defaults to `"-"`
-- `tags`: An array of tags to use in the new name of the file, defaults to `["artist", "title"]`
+- `noop`: Perform a dry run without renaming the file, defaults to `false`
+- `separator`: The separator used to split the tags in the new name, defaults to `"-"`
+- `tags`: An array of the tags used in the new name, defaults to `["artist", "title"]`
 
-Returns an [`EventEmmiter`](https://nodejs.org/api/events.html#events_class_eventemitter) object with the following events:
-
-- `"success"`, emitted when the new path is different from the old path, passing the new path (string) to the callback
-- `"abort"`, emitted when the new path is the same as the old path, passing the old path (string) to the callback
-- `"error"`, emitted when a file cannot be renamed, passing the `Error` object to the callback
-- `"complete"`, emitted when all files have been processed
+Resolves with the new path.
 
 ### Examples
 
 ```js
 import tagtoname from "tagtoname";
 
-// Rename files using the "title" and "year" tags
-tagtoname(["file1.mp4", "file2.mp4"], { tags: ["title", "year"] })
-  .on("success", newPath => console.log(newPath))
-  .on("abort", oldPath => console.log(`${oldPath} (unchanged)`))
-  .on("error", error => console.error(error.message));
+// Rename "/file.mp3"
+// assuming the artist tag is "Queen" and the title tag is "Bohemian Rhapsody"
+tagtoname("/file.mp3").then(console.log);
+// => /queen-bohemian-rhapsody.mp3
+
+// Rename "/file.mp3" keeping the original case
+// assuming the artist tag is "Queen" and the title tag is "Bohemian Rhapsody"
+tagtoname("/file.mp3", { keepCase: true }).then(console.log);
+// => /Queen-Bohemian-Rhapsody.mp3
+
+// Rename "/file.mp3" using "_" as a separator
+// assuming the artist tag is "Queen" and the title tag is "Bohemian Rhapsody"
+tagtoname("/file.mp3", { separator: "_" }).then(console.log);
+// => /queen_bohemian-rhapsody.mp3
+
+// Rename "/file.mp3" using the "year" and "title" tags
+// assuming the year tag is "1975" and the title tag is "Bohemian Rhapsody"
+tagtoname("/file.mp3", { tags: ["year", "title"] }).then(console.log);
+// => /1975-bohemian-rhapsody.mp3
 ```
 
 ## License
