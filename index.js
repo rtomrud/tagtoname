@@ -85,9 +85,9 @@ module.exports = function (
     noop ? () => Promise.resolve() : renameWithLock
   );
   const emmiter = new EventEmmiter();
-  const jobs = [...paths];
-  const work = (src) =>
-    readTags(src)
+  let jobs = paths.length;
+  const work = (src) => {
+    return readTags(src)
       .then((srcTags) =>
         renameSafely(
           src,
@@ -99,12 +99,21 @@ module.exports = function (
       )
       .then((dest) => emmiter.emit(src === dest ? "abort" : "success", dest))
       .catch((error) => emmiter.emit("error", error))
-      .then(() => (jobs.length > 0 ? work(jobs.pop()) : undefined));
+      .then(() => {
+        if (jobs === 0) {
+          return null;
+        }
+
+        jobs -= 1;
+        return work(paths[jobs]);
+      });
+  };
 
   const workers = [];
   const workerCount = 4;
-  while (jobs.length > 0 && workers.length < workerCount) {
-    workers.push(work(jobs.pop()));
+  while (jobs > 0 && workers.length < workerCount) {
+    jobs -= 1;
+    workers.push(work(paths[jobs]));
   }
 
   Promise.all(workers).then(() => emmiter.emit("complete"));
