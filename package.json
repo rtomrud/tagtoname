@@ -37,7 +37,7 @@
   "dependencies": {
     "getopts": "2.2.5",
     "lockfile": "1.0.4",
-    "music-metadata": "6.4.0",
+    "music-metadata": "7.0.0",
     "standard-slugify": "2.0.1"
   },
   "devDependencies": {
