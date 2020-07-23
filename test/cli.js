@@ -162,12 +162,12 @@ test("cli with many operands and options", async ({
   const [dir, oldPath, errorPath, existingPath] = await setup([
     "./samples/4-Ruun-RUUN.ogg",
     "./samples/9-Addicted-Numbered.ogg",
-    "./samples/Addicted--9--Numbered.ogg",
+    "./samples/Addicted_9_Numbered.ogg",
   ]);
-  const newPath = join(dir, "Ruun--4--RUUN.ogg");
+  const newPath = join(dir, "Ruun_4_RUUN.ogg");
   deepEqual(
     await cliOutput(
-      `-k -n -s-- -t album -t track -t title ${oldPath} ${errorPath}`
+      `-k -n -s _ -t album -t track -t title ${oldPath} ${errorPath}`
     ),
     {
       stdout: [`${newPath}\n`],
@@ -192,12 +192,12 @@ test("cli with many operands and long options", async ({
   const [dir, oldPath, errorPath, existingPath] = await setup([
     "./samples/4-Ruun-RUUN.ogg",
     "./samples/9-Addicted-Numbered.ogg",
-    "./samples/Addicted--9--Numbered.ogg",
+    "./samples/Addicted_9_Numbered.ogg",
   ]);
-  const newPath = join(dir, "Ruun--4--RUUN.ogg");
+  const newPath = join(dir, "Ruun_4_RUUN.ogg");
   deepEqual(
     await cliOutput(
-      `--keep-case --noop --separator=-- --tag=album --tag=track --tag=title ${oldPath} ${errorPath}`
+      `--keep-case --noop --separator=_ --tag=album --tag=track --tag=title ${oldPath} ${errorPath}`
     ),
     {
       stdout: [`${newPath}\n`],

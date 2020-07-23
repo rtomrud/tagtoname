@@ -101,9 +101,9 @@ test("tagtoname with the separator option", async ({ equal, end }) => {
   const [dir, oldPath] = await setup([
     "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
   ]);
-  const newPath = join(dir, "paradise-lost---victim-of-the-past.flac");
+  const newPath = join(dir, "paradise-lost_victim-of-the-past.flac");
   equal(
-    await tagtoname(oldPath, { separator: "---" }),
+    await tagtoname(oldPath, { separator: "_" }),
     newPath,
     "resolves with the new path"
   );
