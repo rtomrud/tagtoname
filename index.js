@@ -28,7 +28,7 @@ const name = (metadataTags, tags, separator) =>
     .join(separator);
 
 /**
- * Renames an audio file using its metadata tags.
+ * Renames an audio file using its metadata tags. Resolves with the new path.
  *
  * The first argument is the `path` of the file to be renamed.
  *
@@ -42,8 +42,6 @@ const name = (metadataTags, tags, separator) =>
  * defaults to `"-"`
  * - `tags`: An array of the tags used in the new name,
  * defaults to `["artist", "title"]`
- *
- * Resolves with the new path.
  */
 module.exports = function (
   path = "",
