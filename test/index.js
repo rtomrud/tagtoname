@@ -150,6 +150,27 @@ test("tagtoname with the tags option and a missing tag", async ({
   end();
 });
 
+test("tagtoname with the tags option but all tags missing", async ({
+  equal,
+  end,
+}) => {
+  const [dir, oldPath] = await setup([
+    "./samples/paradise-lost-victim-of-the-past.flac",
+  ]);
+  const newPath = join(dir, ".flac");
+  equal(
+    await tagtoname(oldPath, { tags: ["album", "track"] }).catch(
+      ({ message }) => message
+    ),
+    `Failed because '${oldPath}' is missing all tags`,
+    "rejects with an error"
+  );
+  equal(await exists(oldPath), true, "does not delete the old path");
+  equal(await exists(newPath), false, "does not create the new path");
+  await teardown(dir);
+  end();
+});
+
 test("tagtoname with a file that would override another file", async ({
   equal,
   end,

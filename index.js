@@ -61,6 +61,13 @@ module.exports = function (
         return tags;
       }, [])
       .join(separator);
+
+    if (name === "") {
+      return Promise.reject(
+        Error(`Failed because '${path}' is missing all tags`)
+      );
+    }
+
     const newPath = join(dirname(path), name + extname(path));
     return path === newPath
       ? newPath
