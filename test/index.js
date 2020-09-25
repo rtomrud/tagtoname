@@ -27,8 +27,14 @@ const setup = (srcs) =>
   );
 
 const teardown = (dir) =>
-  readdir(dir)
-    .then((files) => Promise.all(files.map((file) => unlink(join(dir, file)))))
+  readdir(dir, { withFileTypes: true })
+    .then((files) =>
+      Promise.all(
+        files.map((file) =>
+          (file.isDirectory() ? teardown : unlink)(join(dir, file.name))
+        )
+      )
+    )
     .then(() => rmdir(dir));
 
 test("tagtoname without a path", async ({ equal, end }) => {
@@ -101,9 +107,9 @@ test("tagtoname with the separator option", async ({ equal, end }) => {
   const [dir, oldPath] = await setup([
     "./samples/Paradise-Lost-Victim-Of-The-Past.flac",
   ]);
-  const newPath = join(dir, "paradise-lost_victim-of-the-past.flac");
+  const newPath = join(dir, "paradise-lost/victim-of-the-past.flac");
   equal(
-    await tagtoname(oldPath, { separator: "_" }),
+    await tagtoname(oldPath, { separator: "/" }),
     newPath,
     "resolves with the new path"
   );
@@ -118,6 +124,23 @@ test("tagtoname with the tags option", async ({ equal, end }) => {
   const newPath = join(dir, "addicted-9-numbered.ogg");
   equal(
     await tagtoname(oldPath, { tags: ["album", "track", "title"] }),
+    newPath,
+    "resolves with the new path"
+  );
+  equal(await exists(oldPath), false, "deletes the old path");
+  equal(await exists(newPath), true, "creates the new path");
+  await teardown(dir);
+  end();
+});
+
+test("tagtoname with the tags option and a missing tag", async ({
+  equal,
+  end,
+}) => {
+  const [dir, oldPath] = await setup(["./samples/9-Addicted-Numbered.ogg"]);
+  const newPath = join(dir, "addicted-numbered.ogg");
+  equal(
+    await tagtoname(oldPath, { tags: ["genre", "album", "title"] }),
     newPath,
     "resolves with the new path"
   );

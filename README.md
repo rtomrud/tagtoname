@@ -57,9 +57,10 @@ tagtoname -k file.mp3
 tagtoname -n folder/*
 
 # Rename a file using a custom separator.
-# For example, if the file has the "artist" tag "Debussy", and the "title" tag
-# "Reverie", it will be renamed to "debussy_reverie.mp3".
-tagtoname -s _ file.mp3
+# For example, if the file has the "artist" tag "Debussy" and the "title" tag
+# "Reverie", the file will be renamed to "debussy/reverie.mp3" (since the
+# separator is "/", the folder "debussy" is created if needed).
+tagtoname -s / file.mp3
 
 # Rename a file using specific tags.
 # For example, if the file has the "title" tag "A Clockwork Orange", and the
@@ -97,10 +98,11 @@ tagtoname("/file.mp3").then(console.log);
 tagtoname("/file.mp3", { keepCase: true }).then(console.log);
 // => /Queen-Bohemian-Rhapsody.mp3
 
-// Rename "/file.mp3" using "_" as a separator
+// Rename "/file.mp3" using "/" as a separator
 // assuming the artist tag is "Queen" and the title tag is "Bohemian Rhapsody"
-tagtoname("/file.mp3", { separator: "_" }).then(console.log);
-// => /queen_bohemian-rhapsody.mp3
+// (since the separator is "/", the folder "queen" is created if needed).
+tagtoname("/file.mp3", { separator: "/" }).then(console.log);
+// => /queen/bohemian-rhapsody.mp3
 
 // Rename "/file.mp3" using the "year" and "title" tags
 // assuming the year tag is "1975" and the title tag is "Bohemian Rhapsody"

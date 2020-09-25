@@ -1,6 +1,6 @@
 const {
   constants,
-  promises: { access, rename },
+  promises: { access, mkdir, rename },
 } = require("fs");
 const { basename, dirname, extname, join } = require("path");
 const { promisify } = require("util");
@@ -12,20 +12,17 @@ const lockPromise = promisify(lock);
 const unlockPromise = promisify(unlock);
 
 const renameWithLock = (oldPath, newPath) => {
-  const lockFile = join(dirname(newPath), `${basename(newPath)}.lock`);
+  const dir = dirname(newPath);
+  const lockFile = join(dir, `${basename(newPath)}.lock`);
   return lockPromise(lockFile)
+    .catch((error) =>
+      error.code === "ENOENT"
+        ? mkdir(dir, { recursive: true })
+        : Promise.reject(error)
+    )
     .then(() => rename(oldPath, newPath))
     .then(() => unlockPromise(lockFile));
 };
-
-const name = (metadataTags, tags, separator) =>
-  tags
-    .map((tag) => {
-      const value = metadataTags[tag];
-      return typeof value === "object" ? Object.values(value)[0] : value;
-    })
-    .filter((element) => element != null)
-    .join(separator);
 
 /**
  * Renames an audio file using its metadata tags. Resolves with the new path.
@@ -52,11 +49,19 @@ module.exports = function (
     tags = ["artist", "title"],
   } = {}
 ) {
-  return parseFile(path).then(({ common: metadataTags }) => {
-    const newPath = join(
-      dirname(path),
-      slugify(name(metadataTags, tags, separator), { keepCase }) + extname(path)
-    );
+  return parseFile(path).then(({ common }) => {
+    const name = tags
+      .reduce((tags, key) => {
+        const value = common[key];
+        const tag = typeof value === "object" ? Object.values(value)[0] : value;
+        if (tag != null) {
+          tags.push(slugify(String(tag), { keepCase }));
+        }
+
+        return tags;
+      }, [])
+      .join(separator);
+    const newPath = join(dirname(path), name + extname(path));
     return path === newPath
       ? newPath
       : access(newPath, constants.F_OK).then(
