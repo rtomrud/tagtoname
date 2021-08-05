@@ -31,7 +31,7 @@
   "scripts": {
     "lint": "eslint .",
     "start": "node bin/cli.js",
-    "test": "nyc --reporter html tape \"test/**/*.js\" && nyc check-coverage --statements 100 --branches 100 --functions 100 --lines 100",
+    "test": "jest",
     "posttest": "npm run lint"
   },
   "dependencies": {
@@ -45,9 +45,8 @@
     "eslint-config-pretty-strict": "7.0.0",
     "eslint-plugin-prettier": "3.1.4",
     "husky": "4.3.0",
-    "nyc": "15.1.0",
-    "prettier": "2.1.2",
-    "tape": "5.0.1"
+    "jest": "27.0.6",
+    "prettier": "2.1.2"
   },
   "engines": {
     "node": "10 || >= 12"
@@ -59,6 +58,17 @@
     },
     "extends": [
       "./node_modules/eslint-config-pretty-strict/index.js"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "test/**"
+        ],
+        "globals": {
+          "expect": true,
+          "test": true
+        }
+      }
     ],
     "parserOptions": {
       "ecmaVersion": 2019,
