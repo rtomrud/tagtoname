@@ -8,7 +8,7 @@ const {
 } = require("fs").promises;
 const { tmpdir } = require("os");
 const { basename, join } = require("path");
-const test = require("../node_modules/tape/index.js");
+const test = require("tape");
 const tagtoname = require("../index.js");
 
 const exists = (path) =>

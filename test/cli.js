@@ -9,7 +9,7 @@ const {
 } = require("fs").promises;
 const { tmpdir } = require("os");
 const { basename, join } = require("path");
-const test = require("../node_modules/tape/index.js");
+const test = require("tape");
 
 const cli = join(__dirname, "../bin/cli.js");
 
