@@ -42,21 +42,22 @@ and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
     tags: Array.isArray(opts.t) ? opts.t : [opts.t],
   };
   let jobs = paths.length;
-  const work = (path) =>
-    tagtoname(path, options)
-      .then((dest) => console.log(dest))
-      .catch(({ message }) => {
-        console.error(`${path}: ${message}`);
-        process.exitCode = 1;
-      })
-      .then(() => {
-        if (jobs === 0) {
-          return null;
-        }
+  const work = async (path) => {
+    try {
+      const dest = await tagtoname(path, options);
+      console.log(dest);
+    } catch ({ message }) {
+      process.exitCode = 1;
+      console.error(`${path}: ${message}`);
+    }
 
-        jobs -= 1;
-        return work(paths[jobs]);
-      });
+    if (jobs === 0) {
+      return null;
+    }
+
+    jobs -= 1;
+    return work(paths[jobs]);
+  };
 
   for (let workers = 0; jobs > 0 && workers < 4; workers += 1) {
     jobs -= 1;
