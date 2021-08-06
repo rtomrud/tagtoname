@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const { cpus } = require("os");
 const getopts = require("getopts");
 const tagtoname = require("../index.js");
 
@@ -59,7 +60,8 @@ and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
     return work(paths[jobs]);
   };
 
-  for (let workers = 0; jobs > 0 && workers < 4; workers += 1) {
+  const cpuCount = cpus().length;
+  for (let workers = 0; jobs > 0 && workers < cpuCount; workers += 1) {
     jobs -= 1;
     work(paths[jobs]);
   }
