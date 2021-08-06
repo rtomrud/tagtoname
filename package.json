@@ -35,7 +35,7 @@
     "posttest": "npm run lint"
   },
   "dependencies": {
-    "getopts": "2.2.5",
+    "getopts": "2.3.0",
     "lockfile": "1.0.4",
     "music-metadata": "7.4.0",
     "standard-slugify": "3.0.0"
