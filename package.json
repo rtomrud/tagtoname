@@ -1,6 +1,6 @@
 {
   "name": "tagtoname",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "description": "Renames audio files using the metadata tags",
   "keywords": [
     "audio",
