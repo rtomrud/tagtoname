@@ -51,34 +51,6 @@
   "engines": {
     "node": "10 || >= 12"
   },
-  "eslintConfig": {
-    "env": {
-      "es6": true,
-      "node": true
-    },
-    "extends": [
-      "./node_modules/eslint-config-pretty-strict/index.js"
-    ],
-    "overrides": [
-      {
-        "files": [
-          "test/**"
-        ],
-        "globals": {
-          "expect": true,
-          "test": true
-        }
-      }
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2019,
-      "sourceType": "module"
-    },
-    "root": true
-  },
-  "eslintIgnore": [
-    "coverage"
-  ],
   "husky": {
     "hooks": {
       "pre-commit": "npm test"
