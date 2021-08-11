@@ -6,11 +6,12 @@
   "extends": ["eslint-config-pretty-strict"],
   "overrides": [
     {
-      "files": ["test/**"],
-      "globals": {
-        "expect": true,
-        "test": true
-      }
+      "extends": ["plugin:jest/recommended"],
+      "files": [
+        "**/__tests__/**/*.[jt]s?(x)",
+        "**/?(*.)+(spec|test).[jt]s?(x)"
+      ],
+      "plugins": ["jest"]
     }
   ],
   "parserOptions": {
