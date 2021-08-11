@@ -14,8 +14,7 @@
     }
   ],
   "parserOptions": {
-    "ecmaVersion": 2019,
-    "sourceType": "module"
+    "ecmaVersion": 2019
   },
   "root": true
 }

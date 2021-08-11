@@ -1,3 +1,5 @@
+"use strict";
+
 const {
   constants,
   promises: { access, mkdir, rename },

@@ -1,3 +1,5 @@
+"use strict";
+
 const { spawn } = require("child_process");
 const { access, copyFile, mkdtemp, readdir, rmdir, unlink } =
   require("fs").promises;
