@@ -1,11 +1,5 @@
-const {
-  access,
-  copyFile,
-  mkdtemp,
-  readdir,
-  rmdir,
-  unlink,
-} = require("fs").promises;
+const { access, copyFile, mkdtemp, readdir, rmdir, unlink } =
+  require("fs").promises;
 const { tmpdir } = require("os");
 const { basename, join } = require("path");
 const tagtoname = require("../index.js");
