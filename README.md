@@ -33,7 +33,7 @@ For example, by default a file with the "mp3" ext, the artist tag "Beethoven",
 and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".
 ```
 
-See [the list of supported tags](https://github.com/Borewit/music-metadata/blob/v6.4.0/doc/common_metadata.md#common-metadata) (the `-t` option accepts any value from the "Common tag" column).
+See [the list of supported tags](https://github.com/Borewit/music-metadata/blob/v7.11.3/doc/common_metadata.md) (the `-t` option accepts any value from the "Common tag" column).
 
 ### Examples
 
