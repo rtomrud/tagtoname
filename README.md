@@ -109,7 +109,3 @@ tagtoname("/file.mp3", { separator: "/" }).then(console.log);
 tagtoname("/file.mp3", { tags: ["year", "title"] }).then(console.log);
 // => /1975-bohemian-rhapsody.mp3
 ```
-
-## License
-
-[MIT](./LICENSE)
