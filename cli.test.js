@@ -16,7 +16,7 @@ import { promisify } from "node:util";
 
 const execFile = promisify(execFileCb);
 
-const cli = new URL("../bin/cli.js", import.meta.url).pathname;
+const cli = new URL("./cli.js", import.meta.url).pathname;
 
 const setup = async (srcs) => {
   const dir = await mkdtemp(join(tmpdir(), "test-"));

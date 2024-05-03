@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import test from "node:test";
 import { URL } from "node:url";
-import tagtoname from "../index.js";
+import tagtoname from "./index.js";
 
 const setup = async (srcs) => {
   const dir = await mkdtemp(join(tmpdir(), "test-"));

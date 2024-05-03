@@ -19,11 +19,11 @@
   "license": "MIT",
   "author": "Artem Rudenko <rtomrud@gmail.com>",
   "files": [
-    "bin/cli.js",
+    "cli.js",
     "index.js",
     "index.d.ts"
   ],
-  "bin": "bin/cli.js",
+  "bin": "cli.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/rtomrud/tagtoname.git"
@@ -31,7 +31,7 @@
   "scripts": {
     "format": "prettier --check .",
     "lint": "eslint .",
-    "start": "node bin/cli.js",
+    "start": "node ./cli.js",
     "test": "node --test --experimental-test-coverage",
     "posttest": "npm run lint && npm run format"
   },

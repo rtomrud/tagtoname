@@ -6,7 +6,7 @@ import { readFile } from "fs/promises";
 import { cpus } from "node:os";
 import { URL } from "node:url";
 import getopts from "getopts";
-import tagtoname from "../index.js";
+import tagtoname from "./index.js";
 
 const opts = getopts(process.argv.slice(2), {
   alias: { k: ["keep-case", "keepCase"], n: "noop", s: "separator", t: "tag" },
@@ -36,7 +36,7 @@ For example, by default a file with the "mp3" ext, the artist tag "Beethoven",
 and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
   process.exit(opts.help ? 0 : 1);
 } else if (opts.version) {
-  const data = await readFile(new URL("../package.json", import.meta.url));
+  const data = await readFile(new URL("./package.json", import.meta.url));
   const { version } = JSON.parse(data);
   console.log(`tagtoname ${version}`);
 } else {
