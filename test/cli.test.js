@@ -1,22 +1,27 @@
-"use strict";
-
-const { execFile: execFileCb } = require("child_process");
-const { access, copyFile, mkdtemp, readdir, rmdir, unlink } =
-  require("fs").promises;
-const { tmpdir } = require("os");
-const { basename, join } = require("path");
-const { promisify } = require("util");
+import { execFile as execFileCb } from "node:child_process";
+import {
+  access,
+  copyFile,
+  mkdtemp,
+  readdir,
+  rmdir,
+  unlink,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { URL } from "node:url";
+import { promisify } from "node:util";
 
 const execFile = promisify(execFileCb);
 
-const cli = join(__dirname, "../bin/cli.js");
+const cli = new URL("../bin/cli.js", import.meta.url).pathname;
 
 const setup = async (srcs) => {
   const dir = await mkdtemp(join(tmpdir(), "test-"));
   const dests = await Promise.all(
     srcs.map(async (src) => {
       const dest = join(dir, basename(src));
-      await copyFile(join(__dirname, src), dest);
+      await copyFile(join(new URL(import.meta.url).pathname, "..", src), dest);
       return dest;
     })
   );

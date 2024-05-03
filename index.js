@@ -1,14 +1,10 @@
-"use strict";
-
-const {
-  constants,
-  promises: { access, mkdir, rename },
-} = require("fs");
-const { basename, dirname, extname, join } = require("path");
-const { promisify } = require("util");
-const { lock: lockCb, unlock: unlockCb } = require("lockfile");
-const { parseFile } = require("music-metadata");
-const slugify = require("standard-slugify");
+import { constants } from "node:fs";
+import { access, mkdir, rename } from "node:fs/promises";
+import { basename, dirname, extname, join } from "node:path";
+import { promisify } from "node:util";
+import { lock as lockCb, unlock as unlockCb } from "lockfile";
+import { parseFile } from "music-metadata";
+import slugify from "standard-slugify";
 
 const lock = promisify(lockCb);
 const unlock = promisify(unlockCb);
@@ -38,7 +34,7 @@ const exists = async (path) => {
  * - `tags`: An array of the tags used in the new name,
  * defaults to `["artist", "title"]`
  */
-module.exports = async function (
+export default async function (
   path = "",
   {
     keepCase = false,
@@ -92,4 +88,4 @@ module.exports = async function (
   await rename(path, newPath);
   await unlock(lockFile);
   return newPath;
-};
+}
