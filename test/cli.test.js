@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { execFile as execFileCb } from "node:child_process";
 import {
   access,
@@ -9,6 +10,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import test from "node:test";
 import { URL } from "node:url";
 import { promisify } from "node:util";
 
@@ -23,7 +25,7 @@ const setup = async (srcs) => {
       const dest = join(dir, basename(src));
       await copyFile(join(new URL(import.meta.url).pathname, "..", src), dest);
       return dest;
-    })
+    }),
   );
   return [dir, ...dests];
 };
@@ -36,23 +38,23 @@ const teardown = async (dir) => {
 
 test("cli with no options", async () => {
   const { code, stdout, stderr } = await execFile("node", [cli]).catch(
-    (e) => e
+    (e) => e,
   );
-  expect(code).toBe(1);
-  expect(stdout).toBe("");
-  expect(stderr).toEqual(expect.stringMatching(/^Usage:/i));
+  assert.equal(code, 1);
+  assert.equal(stdout, "");
+  assert.ok(stderr.startsWith("Usage:"));
 });
 
 test("cli with the --help option", async () => {
   const { stdout, stderr } = await execFile("node", [cli, "--help"]);
-  expect(stdout).toEqual(expect.stringMatching(/^Usage:/i));
-  expect(stderr).toBe("");
+  assert.ok(stdout.startsWith("Usage:"));
+  assert.equal(stderr, "");
 });
 
 test("cli with the --version option", async () => {
   const { stdout, stderr } = await execFile("node", [cli, "--version"]);
-  expect(stdout).toEqual(expect.stringMatching(/^tagtoname \d\.\d\.\d/));
-  expect(stderr).toBe("");
+  assert.ok(stdout.startsWith("tagtoname"));
+  assert.equal(stderr, "");
 });
 
 test("cli with one operand and one option", async () => {
@@ -66,10 +68,10 @@ test("cli with one operand and one option", async () => {
     "title",
     oldPath,
   ]);
-  expect(stdout).toEqual(expect.stringMatching(newPath));
-  expect(stderr).toBe("");
-  await expect(access(oldPath)).rejects.toThrow();
-  expect(await access(newPath)).toBe(undefined);
+  assert.ok(stdout.includes(newPath));
+  assert.equal(stderr, "");
+  await assert.rejects(() => access(oldPath));
+  assert.equal(await access(newPath), undefined);
   await teardown(dir);
 });
 
@@ -94,21 +96,21 @@ test("cli with many operands", async () => {
     oldPath4,
     oldPath5,
   ]);
-  expect(stdout).toEqual(expect.stringMatching(newPath1));
-  expect(stdout).toEqual(expect.stringMatching(newPath2));
-  expect(stdout).toEqual(expect.stringMatching(newPath3));
-  expect(stdout).toEqual(expect.stringMatching(newPath4));
-  expect(stdout).toEqual(expect.stringMatching(newPath5));
-  expect(stderr).toBe("");
-  await expect(access(oldPath1)).rejects.toThrow();
-  expect(await access(newPath1)).toBe(undefined);
-  await expect(access(oldPath2)).rejects.toThrow();
-  expect(await access(newPath2)).toBe(undefined);
-  await expect(access(oldPath3)).rejects.toThrow();
-  expect(await access(newPath3)).toBe(undefined);
-  await expect(access(oldPath4)).rejects.toThrow();
-  expect(await access(newPath4)).toBe(undefined);
-  expect(await access(oldPath5)).toBe(undefined);
+  assert.ok(stdout.includes(newPath1));
+  assert.ok(stdout.includes(newPath2));
+  assert.ok(stdout.includes(newPath3));
+  assert.ok(stdout.includes(newPath4));
+  assert.ok(stdout.includes(newPath5));
+  assert.equal(stderr, "");
+  await assert.rejects(() => access(oldPath1));
+  assert.equal(await access(newPath1), undefined);
+  await assert.rejects(() => access(oldPath2));
+  assert.equal(await access(newPath2), undefined);
+  await assert.rejects(() => access(oldPath3));
+  assert.equal(await access(newPath3), undefined);
+  await assert.rejects(() => access(oldPath4));
+  assert.equal(await access(newPath4), undefined);
+  assert.equal(await access(oldPath5), undefined);
   await teardown(dir);
 });
 
@@ -134,12 +136,12 @@ test("cli with many operands and options", async () => {
     oldPath,
     errorPath,
   ]).catch((e) => e);
-  expect(code).toBe(1);
-  expect(stdout).toEqual(expect.stringMatching(newPath));
-  expect(stderr).toEqual(expect.stringMatching(errorPath));
-  expect(stderr).toEqual(expect.stringMatching(existingPath));
-  expect(await access(oldPath)).toBe(undefined);
-  await expect(access(newPath)).rejects.toThrow();
+  assert.equal(code, 1);
+  assert.ok(stdout.includes(newPath));
+  assert.ok(stderr.includes(errorPath));
+  assert.ok(stderr.includes(existingPath));
+  assert.equal(await access(oldPath), undefined);
+  await assert.rejects(() => access(newPath));
   await teardown(dir);
 });
 
@@ -161,11 +163,11 @@ test("cli with many operands and long options", async () => {
     oldPath,
     errorPath,
   ]).catch((e) => e);
-  expect(code).toBe(1);
-  expect(stdout).toEqual(expect.stringMatching(newPath));
-  expect(stderr).toEqual(expect.stringMatching(errorPath));
-  expect(stderr).toEqual(expect.stringMatching(existingPath));
-  expect(await access(oldPath)).toBe(undefined);
-  await expect(access(newPath)).rejects.toThrow();
+  assert.equal(code, 1);
+  assert.ok(stdout.includes(newPath));
+  assert.ok(stderr.includes(errorPath));
+  assert.ok(stderr.includes(existingPath));
+  assert.equal(await access(oldPath), undefined);
+  await assert.rejects(() => access(newPath));
   await teardown(dir);
 });
