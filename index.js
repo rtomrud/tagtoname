@@ -18,22 +18,6 @@ const exists = async (path) => {
   }
 };
 
-/**
- * Renames an audio file using its metadata tags. Resolves with the new path.
- *
- * The first argument is the `path` of the file to be renamed.
- *
- * The second argument is an options object with the following properties:
- *
- * - `keepCase`: Keep the original case of the tags when renaming,
- * defaults to `false`
- * - `noop`: Perform a dry run without renaming the file,
- * defaults to `false`
- * - `separator`: The separator used to split the tags in the new name,
- * defaults to `"-"`
- * - `tags`: An array of the tags used in the new name,
- * defaults to `["artist", "title"]`
- */
 export default async function (
   path = "",
   {
@@ -41,7 +25,7 @@ export default async function (
     noop = false,
     separator = "-",
     tags = ["artist", "title"],
-  } = {}
+  } = {},
 ) {
   const { common } = await parseFile(path);
   const name = tags

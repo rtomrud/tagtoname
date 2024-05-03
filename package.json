@@ -20,7 +20,8 @@
   "author": "Artem Rudenko <rtomrud@gmail.com>",
   "files": [
     "bin/cli.js",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "bin": "bin/cli.js",
   "repository": {
@@ -47,6 +48,7 @@
   },
   "type": "module",
   "exports": {
+    "types": "./index.d.ts",
     "default": "./index.js"
   }
 }
