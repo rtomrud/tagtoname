@@ -1,8 +1,5 @@
 # tagtoname
 
-[![build status](https://github.com/rtomrud/tagtoname/workflows/ci/badge.svg)](https://github.com/rtomrud/tagtoname/actions?query=branch%3Amaster+workflow%3Aci)
-[![npm version](https://badgen.net/npm/v/tagtoname)](https://www.npmjs.com/package/tagtoname)
-
 Renames audio files using the metadata tags
 
 ## Installing
