@@ -41,10 +41,10 @@ See [the list of supported tags](https://github.com/Borewit/music-metadata/blob/
 # "Ode to Joy", by default it will be renamed to "beethoven-ode-to-joy.mp3".
 tagtoname file.mp3
 
-# Rename all files in a folder.
-tagtoname folder/*
+# Rename all files in a directory.
+tagtoname directory/*
 
-# Rename all files in the current folder and its subfolders
+# Rename all files in the current directory and its subdirectories
 tagtoname **/*
 ```
 
@@ -54,13 +54,13 @@ tagtoname **/*
 # tag "Opening", it will be renamed to "Philip-Glass-Opening.mp3".
 tagtoname -k file.mp3
 
-# Dry run, output what would happen if we were to rename all files in a folder.
-tagtoname -n folder/*
+# Dry run, output what would happen if we were to rename all files in a directory.
+tagtoname -n directory/*
 
 # Rename a file using a custom separator.
 # For example, if the file has the "artist" tag "Debussy" and the "title" tag
 # "Reverie", the file will be renamed to "debussy/reverie.mp3" (since the
-# separator is "/", the folder "debussy" is created if needed).
+# separator is "/", the directory "debussy" is created if needed).
 tagtoname -s / file.mp3
 
 # Rename a file using specific tags.
@@ -101,7 +101,7 @@ tagtoname("/file.mp3", { keepCase: true }).then(console.log);
 
 // Rename "/file.mp3" using "/" as a separator
 // assuming the artist tag is "Queen" and the title tag is "Bohemian Rhapsody"
-// (since the separator is "/", the folder "queen" is created if needed).
+// (since the separator is "/", the directory "queen" is created if needed).
 tagtoname("/file.mp3", { separator: "/" }).then(console.log);
 // => /queen/bohemian-rhapsody.mp3
 
