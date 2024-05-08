@@ -27,7 +27,16 @@ export default async function (
     tags = ["artist", "title"],
   } = {},
 ) {
-  const { common } = await parseFile(path);
+  let common;
+  try {
+    ({ common } = await parseFile(path));
+  } catch (error) {
+    if (error.message.includes("ENOENT")) {
+      throw Error(`Failed because '${path}' does not exist`);
+    } else {
+      throw Error(`Failed to parse file '${path}'`);
+    }
+  }
   const name = tags
     .reduce((tags, key) => {
       const value = common[key];

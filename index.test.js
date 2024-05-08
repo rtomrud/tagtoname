@@ -38,7 +38,7 @@ const teardown = async (dir) => {
 
 test("tagtoname without a path", async () => {
   await assert.rejects(() => tagtoname(), {
-    message: "ENOENT: no such file or directory, stat ''",
+    message: "Failed because '' does not exist",
   });
 });
 
@@ -165,7 +165,7 @@ test("tagtoname with a path that does not exist", async () => {
   const [dir] = await setup([]);
   const oldPath = join(dir, "null");
   await assert.rejects(() => tagtoname(oldPath), {
-    message: `ENOENT: no such file or directory, stat '${oldPath}'`,
+    message: `Failed because '${oldPath}' does not exist`,
   });
   await teardown(dir);
 });
@@ -173,7 +173,7 @@ test("tagtoname with a path that does not exist", async () => {
 test("tagtoname with a file without metadata", async () => {
   const [dir, oldPath] = await setup(["./samples/empty"]);
   await assert.rejects(() => tagtoname(oldPath), {
-    message: "Failed to determine audio format",
+    message: `Failed to parse file '${oldPath}'`,
   });
   assert.equal(await access(oldPath), undefined);
   await teardown(dir);
