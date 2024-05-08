@@ -2,27 +2,34 @@
 
 import console from "node:console";
 import process from "node:process";
-import { readFile } from "fs/promises";
-import { cpus } from "node:os";
+import { readFile } from "node:fs/promises";
 import { URL } from "node:url";
 import getopts from "getopts";
+import { globIterate } from "glob";
 import tagtoname from "./index.js";
 
 const opts = getopts(process.argv.slice(2), {
-  alias: { k: ["keep-case", "keepCase"], n: "noop", s: "separator", t: "tag" },
+  alias: {
+    i: "ignore",
+    k: ["keep-case", "keepCase"],
+    n: "noop",
+    s: "separator",
+    t: "tag",
+  },
   boolean: ["k", "n", "help", "version"],
-  string: ["s", "t"],
+  string: ["i", "s", "t"],
   default: { s: "-", t: ["artist", "title"] },
 });
 
 if (opts.help || (!opts.version && opts._.length === 0)) {
   const log = opts.help ? console.log : console.error;
-  log(`Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
+  log(`Usage: tagtoname [-i] [-k] [-n] [-s separator] [-t tag]... file...
 
 Renames audio files using the metadata tags.
 
 Options:
 
+  -i, --ignore=GLOB          Ignore a glob pattern
   -k, --keep-case            Keep the original case of the tags when renaming
   -n, --noop                 Dry run, show new paths without renaming the files
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
@@ -40,15 +47,14 @@ and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
   const { version } = JSON.parse(data);
   console.log(`tagtoname ${version}`);
 } else {
-  const paths = opts._;
   const options = {
     keepCase: opts.k,
     noop: opts.n,
     separator: opts.s,
     tags: Array.isArray(opts.t) ? opts.t : [opts.t],
   };
-  let jobs = paths.length;
-  const work = async (path) => {
+  const iterator = globIterate(opts._, { ignore: opts.i });
+  for await (const path of iterator) {
     try {
       const dest = await tagtoname(path, options);
       console.log(dest);
@@ -56,18 +62,5 @@ and the title tag "Ode to Joy" is renamed to "beethoven-ode-to-joy.mp3".`);
       process.exitCode = 1;
       console.error(`${path}: ${message}`);
     }
-
-    if (jobs === 0) {
-      return null;
-    }
-
-    jobs -= 1;
-    return work(paths[jobs]);
-  };
-
-  const cpuCount = cpus().length;
-  for (let workers = 0; jobs > 0 && workers < cpuCount; workers += 1) {
-    jobs -= 1;
-    work(paths[jobs]);
   }
 }

@@ -57,6 +57,73 @@ test("cli with the --version option", async () => {
   assert.equal(stderr, "");
 });
 
+test("cli with one glob", async () => {
+  const [dir, oldPath1, oldPath2] = await setup([
+    "./samples/4-Ruun-RUUN.ogg",
+    "./samples/9-Addicted-Numbered.ogg",
+  ]);
+  const newPath1 = join(dir, "ruun-ruun.ogg");
+  const newPath2 = join(dir, "addicted-numbered.ogg");
+  const { stdout, stderr } = await execFile("node", [
+    cli,
+    "-t",
+    "album",
+    "-t",
+    "title",
+    `${dir}/**/*.ogg`,
+  ]);
+  assert.ok(stdout.includes(newPath1));
+  assert.ok(stdout.includes(newPath2));
+  assert.equal(stderr, "");
+  await assert.rejects(() => access(oldPath1));
+  await assert.rejects(() => access(oldPath2));
+  assert.equal(await access(newPath1), undefined);
+  assert.equal(await access(newPath2), undefined);
+  await teardown(dir);
+});
+
+test("cli with many globs", async () => {
+  const [dir, oldPath1, oldPath2] = await setup([
+    "./samples/Mr-Bungle-Quote-Unquote.ogg",
+    "./samples/Strapping-Young-Lad-Skeksis.m4a",
+  ]);
+  const newPath1 = join(dir, "mr-bungle-quote-unquote.ogg");
+  const newPath2 = join(dir, "strapping-young-lad-skeksis.m4a");
+  const { stdout, stderr } = await execFile("node", [
+    cli,
+    `${dir}/**/*.ogg`,
+    `${dir}/**/*.m4a`,
+  ]);
+  assert.ok(stdout.includes(newPath1));
+  assert.ok(stdout.includes(newPath2));
+  assert.equal(stderr, "");
+  await assert.rejects(() => access(oldPath1));
+  await assert.rejects(() => access(oldPath2));
+  assert.equal(await access(newPath1), undefined);
+  assert.equal(await access(newPath2), undefined);
+  await teardown(dir);
+});
+
+test("cli with a glob and an ignore pattern", async () => {
+  const [dir, oldPath, ignoredPath] = await setup([
+    "./samples/Mr-Bungle-Quote-Unquote.ogg",
+    "./samples/Strapping-Young-Lad-Skeksis.m4a",
+  ]);
+  const newPath = join(dir, "mr-bungle-quote-unquote.ogg");
+  const { stdout, stderr } = await execFile("node", [
+    cli,
+    "-i",
+    `${dir}/**/*.m4a`,
+    `${dir}/**/*`,
+  ]);
+  assert.ok(stdout.includes(newPath));
+  assert.equal(stderr, "");
+  await assert.rejects(() => access(oldPath));
+  assert.equal(await access(newPath), undefined);
+  assert.equal(await access(ignoredPath), undefined);
+  await teardown(dir);
+});
+
 test("cli with one operand and one option", async () => {
   const [dir, oldPath] = await setup([
     "./samples/paradise-lost-victim-of-the-past.flac",

@@ -11,12 +11,13 @@ npm install tagtoname
 ## CLI
 
 ```
-Usage: tagtoname [-k] [-n] [-s separator] [-t tag]... file...
+Usage: tagtoname [-i] [-k] [-n] [-s separator] [-t tag]... file...
 
 Renames audio files using the metadata tags.
 
 Options:
 
+  -i, --ignore               Ignore a glob pattern
   -k, --keep-case            Keep the original case of the tags when renaming
   -n, --noop                 Dry run, show new paths without renaming the files
   -s, --separator=SEPARATOR  Split tags with SEPARATOR;
@@ -42,6 +43,9 @@ tagtoname file.mp3
 
 # Rename all files in a folder.
 tagtoname folder/*
+
+# Rename all files in the current folder and its subfolders
+tagtoname **/*
 ```
 
 ```bash
