@@ -23,10 +23,12 @@
     "index.js",
     "index.d.ts"
   ],
-  "bin": "cli.js",
+  "bin": {
+    "tagtoname": "cli.js"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rtomrud/tagtoname.git"
+    "url": "git+https://github.com/rtomrud/tagtoname.git"
   },
   "scripts": {
     "format": "prettier --check .",
