@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "getopts": "2.3.0",
-    "glob": "11.0.3",
+    "glob": "11.1.0",
     "lockfile": "1.0.4",
     "music-metadata": "11.6.0",
     "standard-slugify": "4.0.0"
