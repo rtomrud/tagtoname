@@ -41,7 +41,7 @@
     "getopts": "2.3.0",
     "glob": "13.0.0",
     "lockfile": "1.0.4",
-    "music-metadata": "11.10.4",
+    "music-metadata": "11.12.3",
     "standard-slugify": "4.0.0"
   },
   "devDependencies": {
